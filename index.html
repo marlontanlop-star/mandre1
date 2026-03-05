@@ -3,6 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- NUEVO: ETIQUETAS PWA PARA PANTALLA COMPLETA (iOS / Android) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#F5F5F0">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Coffee_bean_icon.svg/512px-Coffee_bean_icon.svg.png">
+    
+    <!-- NUEVO: GENERACIÓN DINÁMICA DE MANIFEST PARA PWA (Quita la barra de Chrome) -->
+    <script>
+        const manifestData = {
+            "name": "MANDRÉ POS",
+            "short_name": "MANDRÉ",
+            "start_url": "/",
+            "display": "standalone",
+            "background_color": "#F5F5F0",
+            "theme_color": "#3E2723",
+            "icons": [{
+                "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Coffee_bean_icon.svg/512px-Coffee_bean_icon.svg.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        document.write('<link rel="manifest" href="' + manifestUrl + '">');
+    </script>
+
     <title>MANDRÉ | Specialty Coffee & Wellness</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -64,6 +92,8 @@
         }
     </script>
     <style>
+        /* NUEVO: touch-action: manipulation elimina el lag de 300ms en celulares haciendo la app ultrarrápida */
+        * { touch-action: manipulation; }
         body { font-family: 'Montserrat', sans-serif; background-color: #F5F5F0; overflow: hidden; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -90,6 +120,11 @@
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
+
+        // NUEVO: HABILITAR PERSISTENCIA OFFLINE DE FIREBASE
+        db.enablePersistence({ synchronizeTabs: true }).catch(function(err) {
+            console.log("Error habilitando persistencia offline:", err);
+        });
 
         // --- ICONOS ---
         const IconBase = ({ children, className, size=24 }) => (
@@ -182,6 +217,8 @@
             const [isOnline, setIsOnline] = useState(navigator.onLine);
             const [isFirebaseConnected, setIsFirebaseConnected] = useState(false);
             const [connectionLogs, setConnectionLogs] = useState([{status: navigator.onLine ? 'online' : 'offline', time: new Date().toLocaleTimeString()}]);
+            // NUEVO: ESTADO PARA RADAR DE USUARIOS
+            const [systemPresence, setSystemPresence] = useState([]);
 
             // --- ESTADOS GLOBALES ---
             const [view, setView] = useState('start'); 
@@ -345,6 +382,9 @@
                 const unsubAbonos = db.collection('abonos').orderBy('id', 'desc').onSnapshot(snap => setAbonos(snap.docs.map(d => d.data())));
                 const unsubAdjustments = db.collection('cashAdjustments').orderBy('id', 'desc').onSnapshot(snap => setCashAdjustments(snap.docs.map(d => d.data())));
                 
+                // NUEVO: Escuchar el estado de conexión de otros usuarios para el Radar Admin
+                const unsubSystemStatus = db.collection('system_status').onSnapshot(snap => setSystemPresence(snap.docs.map(d => d.data())));
+                
                 const unsubActiveOrders = db.collection('activeOrders').onSnapshot(snap => {
                     const data = {};
                     snap.docs.forEach(d => data[d.id] = d.data());
@@ -365,9 +405,29 @@
                     unsubConnection();
                     unsubInv(); unsubComb(); unsubUsers(); unsubTables();
                     unsubOrders(); unsubShifts(); unsubActiveOrders(); unsubExpenses(); unsubManualItems();
-                    unsubCredits(); unsubAbonos(); unsubAdjustments();
+                    unsubCredits(); unsubAbonos(); unsubAdjustments(); unsubSystemStatus();
                 };
             }, []);
+
+            // NUEVO: HEARTBEAT (Latido) PARA REPORTE DE CONEXIÓN EN ADMIN
+            useEffect(() => {
+                if (!currentShiftEmployee) return;
+                
+                const sendHeartbeat = () => {
+                    if (navigator.onLine) {
+                        db.collection('system_status').doc(currentShiftEmployee).set({
+                            employee: currentShiftEmployee,
+                            lastSeen: Date.now(),
+                            isOnline: true
+                        }, { merge: true }).catch(()=>{});
+                    }
+                };
+                
+                sendHeartbeat(); // Latido inicial
+                const interval = setInterval(sendHeartbeat, 15000); // Latido cada 15 segundos
+                
+                return () => clearInterval(interval);
+            }, [currentShiftEmployee, isOnline]);
 
             // --- COMPUTADOS ---
             const categories = ["Calientes", "Frías", "Fit-Pastry", "Bowls", "Combos", "Retail"];
@@ -468,7 +528,7 @@
                 await db.collection('expenses').doc(newEx.id.toString()).set(newEx);
                 setExpenseForm({ desc: '', amount: '' });
                 setIsExpenseModalOpen(false);
-                alert("Egreso registrado exitosamente.");
+                alert(navigator.onLine ? "Egreso registrado exitosamente." : "Sin conexión. Egreso guardado localmente, se sincronizará cuando regrese internet.");
             };
 
             // --- FUNCIONES CRÉDITOS Y ABONOS (ADMIN) ---
@@ -506,7 +566,7 @@
                     setAbonoForm({ amount: '', method: 'efectivo', assignedUser: '' });
                     setActiveCredit(null);
                     setIsProcessingPayment(false);
-                    alert("Abono registrado con éxito y sumado a la caja del usuario.");
+                    alert(navigator.onLine ? "Abono registrado con éxito y sumado a la caja del usuario." : "Abono guardado localmente, se sincronizará al haber internet.");
                 } catch(e) {
                     alert("Error registrando abono.");
                     setIsProcessingPayment(false);
@@ -923,10 +983,16 @@
                         items: cart, customer: customerName || tableIdStr, subtotal, total
                     });
 
-                    await batch.commit();
-                    alert(`Cuenta de ${tableIdStr} Actualizada/Guardada.`);
-                    setServiceSelected(false);
-                    setShowMobileCart(false);
+                    // Gracias a db.enablePersistence(), el commit() funcionará y guardará offline
+                    // Si no lo usáramos, se colgaría esperando conexión.
+                    try {
+                        await batch.commit();
+                        alert(navigator.onLine ? `Cuenta de ${tableIdStr} Actualizada/Guardada.` : `Sin internet. Cuenta de ${tableIdStr} guardada localmente.`);
+                        setServiceSelected(false);
+                        setShowMobileCart(false);
+                    } catch(e) {
+                        alert("Error guardando cuenta localmente.");
+                    }
                 } else {
                     openPaymentModal();
                 }
@@ -1017,10 +1083,10 @@
                     setShowMobileCart(false);
                     setCashGiven('');
                     setIsProcessingPayment(false);
-                    alert(`¡Venta ${method === 'credito' ? 'a Crédito' : ''} Sincronizada y Cerrada con Éxito!`);
+                    alert(navigator.onLine ? `¡Venta ${method === 'credito' ? 'a Crédito' : ''} Sincronizada y Cerrada con Éxito!` : "¡Venta Guardada Offline! Se sincronizará automáticamente cuando vuelva el internet.");
                 } catch (error) {
                     console.error("Error en transacción:", error);
-                    alert("Error de conexión. Intente nuevamente.");
+                    alert("Error de guardado local o conexión. Intente nuevamente.");
                     setIsProcessingPayment(false); 
                 }
             };
@@ -1034,7 +1100,11 @@
                             <div className="w-10 h-10 flex items-center justify-center bg-mandre-coffee rounded-full shadow-lg shrink-0"><IconLeaf /></div>
                             <div className="truncate">
                                 <h1 className="text-lg md:text-xl font-bold tracking-widest text-mandre-coffee">MANDRÉ</h1>
-                                <p className="text-[10px] text-gray-400 font-bold uppercase truncate">{currentShiftEmployee || 'Invitado'}</p>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase truncate flex items-center gap-1">
+                                    {currentShiftEmployee || 'Invitado'}
+                                    {/* Indicador Global de Internet Visual */}
+                                    <span className={`w-2 h-2 rounded-full inline-block ${isOnline ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`}></span>
+                                </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-1 md:gap-2">
@@ -1240,14 +1310,38 @@
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-sm font-bold text-gray-600">Conexión a Firebase</span>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-xs font-bold">{isFirebaseConnected ? 'Sincronizado' : 'Sin Nube'}</span>
+                                                        <span className="text-xs font-bold">{isFirebaseConnected ? 'Sincronizado' : 'Sin Nube (Modo Local)'}</span>
                                                         <div className={`w-3 h-3 rounded-full shadow-sm ${isFirebaseConnected ? 'bg-blue-500' : 'bg-orange-500 animate-pulse'}`}></div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* NUEVO: RADAR DE USUARIOS */}
+                                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-purple-100">
+                                            <h3 className="font-bold text-purple-900 mb-2 flex items-center gap-2"><Activity size={18}/> Radar de Usuarios Conectados</h3>
+                                            <p className="text-xs text-gray-500 mb-4 pb-2 border-b">Verifica si el internet de los otros usuarios y celulares está funcionando en este instante.</p>
+                                            {systemPresence.length === 0 ? <p className="text-sm text-gray-400 text-center py-4">No hay datos de conexión aún. El personal no ha iniciado sesión hoy.</p> : (
+                                                <div className="space-y-3">
+                                                    {systemPresence.map(p => {
+                                                        // Si lastSeen fue hace menos de 45 segundos, se considera Online.
+                                                        const isUserOnline = (Date.now() - p.lastSeen) < 45000; 
+                                                        return (
+                                                            <div key={p.employee} className={`flex justify-between items-center p-4 rounded-xl border ${isUserOnline ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+                                                                <span className="font-bold text-sm text-gray-800">{p.employee}</span>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`text-xs font-bold ${isUserOnline ? 'text-green-700' : 'text-red-700'}`}>{isUserOnline ? 'Conectado a la nube' : 'Aislado / Sin Red'}</span>
+                                                                    <div className={`w-3 h-3 rounded-full shadow-sm ${isUserOnline ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`}></div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+
                                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                            <h3 className="font-bold text-mandre-coffee mb-4 border-b pb-2">Registro de Conexión y Caídas</h3>
+                                            <h3 className="font-bold text-mandre-coffee mb-4 border-b pb-2">Registro de Conexión y Caídas Local</h3>
                                             <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
                                                 {connectionLogs.map((log, i) => (
                                                     <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-gray-50 border border-gray-100 text-sm">
@@ -1647,65 +1741,6 @@
                                     </div>
                                 )}
 
-                                {adminTab === 'shifts' && (
-                                    <div className="max-w-5xl mx-auto animate-fadeIn">
-                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                                            <h3 className="font-bold text-lg text-mandre-coffee">Historial de Cierres de Caja</h3>
-                                            <button onClick={() => { if(confirm("¿Cerrar todas las cajas abiertas?")) performClosure(false); }} className="w-full sm:w-auto bg-red-500 text-white px-4 py-3 sm:py-2 rounded-xl text-xs font-bold shadow hover:bg-red-600 transition active:scale-95">
-                                                CIERRE GENERAL
-                                            </button>
-                                        </div>
-                                        <div className="space-y-4">
-                                            {shifts.map((shift) => (
-                                                <div key={shift.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 relative">
-                                                    <button onClick={() => deleteShift(shift.id)} className="absolute top-4 right-4 text-gray-300 hover:text-red-400 p-2"><Trash2 size={18}/></button>
-                                                    
-                                                    <div className="flex justify-between items-start border-b pb-3">
-                                                        <div>
-                                                            <p className="font-bold text-mandre-coffee text-lg">{shift.date}</p>
-                                                            <p className="text-xs text-gray-400 uppercase font-bold">{shift.employee} {shift.isAuto && '(AUTO)'}</p>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <p className="text-[10px] text-gray-500 uppercase font-bold">Total Ventas (+Abonos)</p>
-                                                            <p className="font-bold text-mandre-sage text-lg">${(shift.totalVentas || 0).toLocaleString()}</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-4 gap-4 text-sm">
-                                                        <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 text-center flex flex-col justify-center">
-                                                            <p className="text-[9px] uppercase font-bold text-gray-500 mb-1 leading-tight">Efectivo(Sist)</p>
-                                                            <p className="font-bold text-mandre-dark">${shift.expectedCash?.toLocaleString()}</p>
-                                                        </div>
-                                                        <div className="bg-red-50 p-2 rounded-xl border border-red-100 text-center flex flex-col justify-center">
-                                                            <p className="text-[9px] uppercase font-bold text-red-500 mb-1">Egresos</p>
-                                                            <p className="font-bold text-red-600">-${(shift.totalExpensesAmount || 0).toLocaleString()}</p>
-                                                        </div>
-                                                        <div className="bg-blue-50 p-2 rounded-xl border border-blue-100 text-center flex flex-col justify-center">
-                                                            <p className="text-[9px] uppercase font-bold text-blue-600 mb-1 leading-tight">Ajustes Canje (Interno)</p>
-                                                            <p className="font-bold text-blue-700">{shift.totalAdjustments > 0 ? '+' : ''}{(shift.totalAdjustments || 0).toLocaleString()}</p>
-                                                        </div>
-                                                        <div className="bg-purple-50 p-2 rounded-xl border border-purple-100 text-center flex flex-col justify-center">
-                                                            <p className="text-[9px] uppercase font-bold text-purple-800 mb-1">Nequi</p>
-                                                            <p className="font-bold text-purple-900">${shift.nequiTotal?.toLocaleString() || 0}</p>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center">
-                                                        <span className="text-sm text-gray-600 font-bold">Efectivo Contado (Físico):</span>
-                                                        <span className="font-bold text-lg">${shift.countedCash?.toLocaleString()}</span>
-                                                    </div>
-                                                    
-                                                    <div className={`text-center py-2 rounded-lg ${shift.diff >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                                                        <p className="text-xs font-bold uppercase">{shift.diff >= 0 ? 'Sobrante de Caja' : 'Faltante de Caja'}</p>
-                                                        <p className="font-bold text-xl">{shift.diff > 0 ? '+' : ''}${shift.diff.toLocaleString()}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {shifts.length === 0 && <p className="text-center text-gray-400 italic py-10">No hay cierres registrados.</p>}
-                                        </div>
-                                    </div>
-                                )}
-
                                 {adminTab === 'products' && (
                                     <div className="max-w-5xl mx-auto space-y-8 animate-fadeIn">
                                         <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -1813,38 +1848,6 @@
                                     </div>
                                 )}
 
-                                {adminTab === 'manual_items' && (
-                                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden max-w-5xl mx-auto p-4 md:p-6 animate-fadeIn border border-gray-100">
-                                        <div className="flex flex-col md:flex-row justify-between md:items-center border-b pb-4 mb-6 gap-4">
-                                            <h3 className="font-bold text-lg text-mandre-coffee">Registro de Items Manuales en Nube</h3>
-                                            <div className="flex flex-col sm:flex-row gap-2">
-                                                <input className="border p-2 rounded-lg text-sm outline-none focus:border-mandre-sage" placeholder="Buscar por nombre..." value={manualItemFilter.name} onChange={e => setManualItemFilter({...manualItemFilter, name: e.target.value})}/>
-                                                <input type="number" className="border p-2 rounded-lg text-sm outline-none focus:border-mandre-sage" placeholder="Precio exacto..." value={manualItemFilter.price} onChange={e => setManualItemFilter({...manualItemFilter, price: e.target.value})}/>
-                                                <input type="date" className="border p-2 rounded-lg text-sm outline-none focus:border-mandre-sage" value={manualItemFilter.date} onChange={e => setManualItemFilter({...manualItemFilter, date: e.target.value})}/>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-4">
-                                            {manualItemsCollection.filter(item => 
-                                                (manualItemFilter.name === '' || item.name.toLowerCase().includes(manualItemFilter.name.toLowerCase())) &&
-                                                (manualItemFilter.price === '' || item.price.toString() === manualItemFilter.price) &&
-                                                (manualItemFilter.date === '' || item.isoDate === manualItemFilter.date)
-                                            ).map((item) => (
-                                                <div key={item.id} className="border rounded-2xl p-4 bg-gray-50 hover:bg-white transition flex flex-col md:flex-row justify-between md:items-center gap-3">
-                                                    <div>
-                                                        <h4 className="font-bold text-mandre-dark">{item.name}</h4>
-                                                        <p className="text-xs text-gray-500">Registrado por: <b>{item.employee || 'Admin'}</b></p>
-                                                    </div>
-                                                    <div className="text-left md:text-right">
-                                                        <p className="text-xl font-bold text-mandre-sage mb-1">${item.price.toLocaleString()} <span className="text-xs text-gray-400 font-medium ml-1">x{item.qty}</span></p>
-                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">{item.date}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {manualItemsCollection.length === 0 && <p className="text-center text-gray-400 italic py-10">No hay items manuales registrados.</p>}
-                                        </div>
-                                    </div>
-                                )}
-
                                 {adminTab === 'combos' && (
                                     <div className="bg-white rounded-2xl shadow-sm p-4 md:p-8 max-w-4xl mx-auto border border-gray-100">
                                         <h3 className="font-bold text-xl text-mandre-coffee mb-6 border-b pb-4">Gestor de Combos</h3>
@@ -1891,6 +1894,97 @@
                                                 ))}
                                                 {combos.length === 0 && <p className="text-gray-400 text-sm italic col-span-full">No hay combos creados.</p>}
                                             </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {adminTab === 'manual_items' && (
+                                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden max-w-5xl mx-auto p-4 md:p-6 animate-fadeIn border border-gray-100">
+                                        <div className="flex flex-col md:flex-row justify-between md:items-center border-b pb-4 mb-6 gap-4">
+                                            <h3 className="font-bold text-lg text-mandre-coffee">Registro de Items Manuales en Nube</h3>
+                                            <div className="flex flex-col sm:flex-row gap-2">
+                                                <input className="border p-2 rounded-lg text-sm outline-none focus:border-mandre-sage" placeholder="Buscar por nombre..." value={manualItemFilter.name} onChange={e => setManualItemFilter({...manualItemFilter, name: e.target.value})}/>
+                                                <input type="number" className="border p-2 rounded-lg text-sm outline-none focus:border-mandre-sage" placeholder="Precio exacto..." value={manualItemFilter.price} onChange={e => setManualItemFilter({...manualItemFilter, price: e.target.value})}/>
+                                                <input type="date" className="border p-2 rounded-lg text-sm outline-none focus:border-mandre-sage" value={manualItemFilter.date} onChange={e => setManualItemFilter({...manualItemFilter, date: e.target.value})}/>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4">
+                                            {manualItemsCollection.filter(item => 
+                                                (manualItemFilter.name === '' || item.name.toLowerCase().includes(manualItemFilter.name.toLowerCase())) &&
+                                                (manualItemFilter.price === '' || item.price.toString() === manualItemFilter.price) &&
+                                                (manualItemFilter.date === '' || item.isoDate === manualItemFilter.date)
+                                            ).map((item) => (
+                                                <div key={item.id} className="border rounded-2xl p-4 bg-gray-50 hover:bg-white transition flex flex-col md:flex-row justify-between md:items-center gap-3">
+                                                    <div>
+                                                        <h4 className="font-bold text-mandre-dark">{item.name}</h4>
+                                                        <p className="text-xs text-gray-500">Registrado por: <b>{item.employee || 'Admin'}</b></p>
+                                                    </div>
+                                                    <div className="text-left md:text-right">
+                                                        <p className="text-xl font-bold text-mandre-sage mb-1">${item.price.toLocaleString()} <span className="text-xs text-gray-400 font-medium ml-1">x{item.qty}</span></p>
+                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">{item.date}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {manualItemsCollection.length === 0 && <p className="text-center text-gray-400 italic py-10">No hay items manuales registrados.</p>}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {adminTab === 'shifts' && (
+                                    <div className="max-w-5xl mx-auto animate-fadeIn">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                                            <h3 className="font-bold text-lg text-mandre-coffee">Historial de Cierres de Caja</h3>
+                                            <button onClick={() => { if(confirm("¿Cerrar todas las cajas abiertas?")) performClosure(false); }} className="w-full sm:w-auto bg-red-500 text-white px-4 py-3 sm:py-2 rounded-xl text-xs font-bold shadow hover:bg-red-600 transition active:scale-95">
+                                                CIERRE GENERAL
+                                            </button>
+                                        </div>
+                                        <div className="space-y-4">
+                                            {shifts.map((shift) => (
+                                                <div key={shift.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 relative">
+                                                    <button onClick={() => deleteShift(shift.id)} className="absolute top-4 right-4 text-gray-300 hover:text-red-400 p-2"><Trash2 size={18}/></button>
+                                                    
+                                                    <div className="flex justify-between items-start border-b pb-3">
+                                                        <div>
+                                                            <p className="font-bold text-mandre-coffee text-lg">{shift.date}</p>
+                                                            <p className="text-xs text-gray-400 uppercase font-bold">{shift.employee} {shift.isAuto && '(AUTO)'}</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-[10px] text-gray-500 uppercase font-bold">Total Ventas (+Abonos)</p>
+                                                            <p className="font-bold text-mandre-sage text-lg">${(shift.totalVentas || 0).toLocaleString()}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-4 gap-4 text-sm">
+                                                        <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 text-center flex flex-col justify-center">
+                                                            <p className="text-[9px] uppercase font-bold text-gray-500 mb-1 leading-tight">Efectivo(Sist)</p>
+                                                            <p className="font-bold text-mandre-dark">${shift.expectedCash?.toLocaleString()}</p>
+                                                        </div>
+                                                        <div className="bg-red-50 p-2 rounded-xl border border-red-100 text-center flex flex-col justify-center">
+                                                            <p className="text-[9px] uppercase font-bold text-red-500 mb-1">Egresos</p>
+                                                            <p className="font-bold text-red-600">-${(shift.totalExpensesAmount || 0).toLocaleString()}</p>
+                                                        </div>
+                                                        <div className="bg-blue-50 p-2 rounded-xl border border-blue-100 text-center flex flex-col justify-center">
+                                                            <p className="text-[9px] uppercase font-bold text-blue-600 mb-1 leading-tight">Ajuste(Interno)</p>
+                                                            <p className="font-bold text-blue-700">{shift.totalAdjustments > 0 ? '+' : ''}{(shift.totalAdjustments || 0).toLocaleString()}</p>
+                                                        </div>
+                                                        <div className="bg-purple-50 p-2 rounded-xl border border-purple-100 text-center flex flex-col justify-center">
+                                                            <p className="text-[9px] uppercase font-bold text-purple-800 mb-1">Nequi</p>
+                                                            <p className="font-bold text-purple-900">${shift.nequiTotal?.toLocaleString() || 0}</p>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center">
+                                                        <span className="text-sm text-gray-600 font-bold">Efectivo Contado (Físico):</span>
+                                                        <span className="font-bold text-lg">${shift.countedCash?.toLocaleString()}</span>
+                                                    </div>
+                                                    
+                                                    <div className={`text-center py-2 rounded-lg ${shift.diff >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                                        <p className="text-xs font-bold uppercase">{shift.diff >= 0 ? 'Sobrante de Caja' : 'Faltante de Caja'}</p>
+                                                        <p className="font-bold text-xl">{shift.diff > 0 ? '+' : ''}${shift.diff.toLocaleString()}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {shifts.length === 0 && <p className="text-center text-gray-400 italic py-10">No hay cierres registrados.</p>}
                                         </div>
                                     </div>
                                 )}
