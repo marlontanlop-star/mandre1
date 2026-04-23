@@ -159,9 +159,20 @@
 
             useEffect(() => {
                 if (displayInventory.length > 0) {
-                    const uniqueCategories = [...new Set(displayInventory.map(item => item.category).filter(Boolean))].sort();
-                    setCategories(uniqueCategories);
-                    if (!activeCategory && uniqueCategories.length > 0) setActiveCategory(uniqueCategories[0]);
+                    // 1. Forzamos el orden exacto que definimos en el POS
+                    const exactCategories = ["CAFE", "BEBIDAS ALCOHOLICAS", "PARA COMER", "Combos"];
+                    
+                    // 2. Revisamos cuáles de estas categorías realmente tienen productos en Firebase
+                    const categoriesWithProducts = exactCategories.filter(cat => 
+                        displayInventory.some(item => item.category === cat)
+                    );
+
+                    setCategories(categoriesWithProducts);
+                    
+                    // 3. Forzamos a que "CAFE" sea la primera en abrirse por defecto
+                    if (!activeCategory && categoriesWithProducts.length > 0) {
+                        setActiveCategory(categoriesWithProducts.includes("CAFE") ? "CAFE" : categoriesWithProducts[0]);
+                    }
                 }
             }, [displayInventory]);
 
