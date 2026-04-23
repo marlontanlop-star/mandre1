@@ -98,19 +98,21 @@
         const X = (props) => <IconBase {...props}><path d="M18 6L6 18M6 6l12 12"/></IconBase>;
 
         const ProductGridItem = ({ product, onClick }) => (
-            <div className="cursor-pointer group flex flex-col" onClick={() => onClick(product)}>
-                <div className="relative aspect-square overflow-hidden bg-white/40 border border-oficina-verde/10 rounded-lg mb-1.5">
+            <div className="cursor-pointer group flex flex-col h-full" onClick={() => onClick(product)}>
+                <div className="relative aspect-square overflow-hidden bg-white/40 border border-oficina-verde/10 rounded-lg mb-2">
                     {product.imageUrl ? (
                         <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                     ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
                              <LogoOficina className="w-8 h-8 opacity-20 mb-1" />
-                            <span className="text-[7px] uppercase font-bold text-oficina-gris tracking-widest line-clamp-2">{product.name}</span>
                         </div>
                     )}
                 </div>
-                <div className="px-0.5">
-                    <p className="text-[11px] font-black text-oficina-verde tracking-tighter leading-none">
+                <div className="px-1 flex flex-col flex-grow space-y-1">
+                    <h4 className="text-[8px] font-extrabold text-oficina-verde uppercase tracking-tighter leading-[1.1] break-words">
+                        {product.name}
+                    </h4>
+                    <p className="text-[10px] font-medium text-oficina-gris tracking-tighter leading-none mt-auto">
                         ${product.price.toLocaleString()}
                     </p>
                 </div>
@@ -226,8 +228,8 @@
                             if (productsInCategory.length === 0) return null;
                             return (
                                 <div key={category} id={`cat-${category}`} className="scroll-mt-36">
-                                    <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-oficina-verde mb-4 mt-6 border-l-4 border-oficina-verde pl-3">{category}</h2>
-                                    <div className="grid grid-cols-3 gap-x-2 gap-y-6">
+                                    <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-oficina-verde mb-6 mt-6 border-l-4 border-oficina-verde pl-3">{category}</h2>
+                                    <div className="grid grid-cols-3 gap-x-2 gap-y-12">
                                         {productsInCategory.map(product => (
                                             <ProductGridItem key={product.id} product={product} onClick={setSelectedProduct} />
                                         ))}
