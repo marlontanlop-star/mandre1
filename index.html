@@ -98,17 +98,21 @@
         const X = (props) => <IconBase {...props}><path d="M18 6L6 18M6 6l12 12"/></IconBase>;
 
         const ProductGridItem = ({ product, onClick }) => (
-            <div className="relative aspect-square cursor-pointer overflow-hidden bg-white/40 border border-oficina-verde/10 rounded-lg" onClick={() => onClick(product)}>
-                {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" />
-                ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
-                         <LogoOficina className="w-10 h-10 opacity-20 mb-1" />
-                        <span className="text-[8px] uppercase font-bold text-oficina-gris tracking-widest line-clamp-2">{product.name}</span>
-                    </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-oficina-verde/20 to-transparent p-2">
-                    <p className="text-[10px] font-black text-oficina-verde tracking-tighter">${product.price.toLocaleString()}</p>
+            <div className="cursor-pointer group flex flex-col" onClick={() => onClick(product)}>
+                <div className="relative aspect-square overflow-hidden bg-white/40 border border-oficina-verde/10 rounded-lg mb-1.5">
+                    {product.imageUrl ? (
+                        <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
+                             <LogoOficina className="w-8 h-8 opacity-20 mb-1" />
+                            <span className="text-[7px] uppercase font-bold text-oficina-gris tracking-widest line-clamp-2">{product.name}</span>
+                        </div>
+                    )}
+                </div>
+                <div className="px-0.5">
+                    <p className="text-[11px] font-black text-oficina-verde tracking-tighter leading-none">
+                        ${product.price.toLocaleString()}
+                    </p>
                 </div>
             </div>
         );
@@ -159,17 +163,11 @@
 
             useEffect(() => {
                 if (displayInventory.length > 0) {
-                    // 1. Forzamos el orden exacto que definimos en el POS
                     const exactCategories = ["CAFE", "BEBIDAS ALCOHOLICAS", "PARA COMER", "Combos"];
-                    
-                    // 2. Revisamos cuáles de estas categorías realmente tienen productos en Firebase
                     const categoriesWithProducts = exactCategories.filter(cat => 
                         displayInventory.some(item => item.category === cat)
                     );
-
                     setCategories(categoriesWithProducts);
-                    
-                    // 3. Forzamos a que "CAFE" sea la primera en abrirse por defecto
                     if (!activeCategory && categoriesWithProducts.length > 0) {
                         setActiveCategory(categoriesWithProducts.includes("CAFE") ? "CAFE" : categoriesWithProducts[0]);
                     }
@@ -198,12 +196,10 @@
                     
                     <header className="relative bg-oficina-bg pb-10 pt-16 px-6 z-20 flex flex-col items-center text-center">
                         <LogoOficina className="w-24 h-24 mb-2" />
-                        
                         <div className="mb-8">
                             <h1 className="font-[200] text-2xl tracking-[0.4em] uppercase text-oficina-verde mb-1">La Oficina</h1>
                             <p className="font-[200] text-[10px] tracking-[0.5em] uppercase text-oficina-gris">Coffee Bar</p>
                         </div>
-
                         <div className="flex items-center justify-center gap-2 text-[9px] uppercase tracking-widest text-oficina-verde/60 border border-oficina-verde/10 px-4 py-1.5 rounded-full bg-white/20">
                             <span className="w-1.5 h-1.5 rounded-full bg-oficina-verde animate-pulse"></span>
                             Catálogo en Vivo
@@ -228,11 +224,10 @@
                         {categories.map(category => {
                             const productsInCategory = displayInventory.filter(p => p.category === category);
                             if (productsInCategory.length === 0) return null;
-
                             return (
                                 <div key={category} id={`cat-${category}`} className="scroll-mt-36">
                                     <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-oficina-verde mb-4 mt-6 border-l-4 border-oficina-verde pl-3">{category}</h2>
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-3 gap-x-2 gap-y-6">
                                         {productsInCategory.map(product => (
                                             <ProductGridItem key={product.id} product={product} onClick={setSelectedProduct} />
                                         ))}
