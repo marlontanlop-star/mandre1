@@ -59,9 +59,9 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         html { scroll-behavior: smooth; }
-        
         .taza-path { fill: none; stroke: #4B5320; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
         .humo-path { fill: none; stroke: #A8A899; stroke-width: 10; stroke-linecap: round; }
+        input[type="checkbox"] { accent-color: #4B5320; }
     </style>
 </head>
 <body class="bg-oficina-bg text-oficina-verde antialiased">
@@ -77,6 +77,11 @@
             storageBucket: "mandre-f9e43.firebasestorage.app",
             messagingSenderId: "865403538422",
             appId: "1:865403538422:web:0ee2fb754343de9bc015d7"
+        };
+
+        const HABLAME_CONFIG = {
+            apiKey: "HHajMRAMKfQrSqkw4WA5dwuWh8xl9RJDeyQTanQJDKXpCLOgPzNEDF1hnY93zd39Ge7tXt20b3nTsMEocV6B0ibTIrvxmgjtN1OmUguZGja4zkABwNW0GdUqmoJ67Zq6",
+            endpoint: "https://api103.hablame.co/api/sms/v3/send/marketing"
         };
 
         if (!firebase.apps.length) {
@@ -96,6 +101,141 @@
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
         );
         const X = (props) => <IconBase {...props}><path d="M18 6L6 18M6 6l12 12"/></IconBase>;
+        const Instagram = (props) => (
+            <IconBase {...props}>
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+            </IconBase>
+        );
+        const UserPlus = (props) => (
+            <IconBase {...props}>
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" x2="20" y1="8" y2="14"/><line x1="23" x2="17" y1="11" y2="11"/>
+            </IconBase>
+        );
+
+        const RegistrationModal = ({ isOpen, onClose }) => {
+            const [formData, setFormData] = useState({ name: '', phone: '', consent: false });
+            const [status, setStatus] = useState('idle');
+
+            const sendWelcomeSMS = async (phone, name) => {
+                const firstName = name.split(' ')[0];
+                try {
+                    await fetch(HABLAME_CONFIG.endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': HABLAME_CONFIG.apiKey
+                        },
+                        body: JSON.stringify({
+                            phone: `57${phone}`,
+                            message: `Hola ${firstName}, bienvenido a LA OFICINA Coffee Bar. Gracias por unirte a nuestro Club. Pronto recibiras nuestras mejores promociones.`,
+                            flash: 0
+                        })
+                    });
+                } catch (e) {
+                    console.error("SMS Error:", e);
+                }
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!formData.consent) return;
+                setStatus('loading');
+                try {
+                    await db.collection('customers').add({
+                        ...formData,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    await sendWelcomeSMS(formData.phone, formData.name);
+                    
+                    setStatus('success');
+                    setTimeout(() => {
+                        onClose();
+                        setFormData({ name: '', phone: '', consent: false });
+                        setStatus('idle');
+                    }, 2000);
+                } catch (error) {
+                    console.error("Error saving customer:", error);
+                    setStatus('idle');
+                }
+            };
+
+            if (!isOpen) return null;
+
+            return (
+                <div className="fixed inset-0 z-[60] bg-oficina-dark/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+                    <div className="bg-oficina-bg w-full max-w-md rounded-t-[2rem] sm:rounded-[2rem] p-8 shadow-2xl animate-slideUp relative">
+                        <button onClick={onClose} className="absolute top-6 right-6 text-oficina-verde/40"><X size={24}/></button>
+                        
+                        {status === 'success' ? (
+                            <div className="py-12 text-center space-y-4">
+                                <div className="w-16 h-16 bg-oficina-verde text-white rounded-full flex items-center justify-center mx-auto animate-bounce">
+                                    <svg size={32} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                </div>
+                                <h3 className="font-bold text-oficina-verde">¡Registro Exitoso!</h3>
+                                <p className="text-[10px] text-oficina-gris uppercase tracking-widest text-center">Revisa tu celular, te enviamos un mensaje</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="mb-8">
+                                    <h3 className="text-xl font-black text-oficina-verde uppercase tracking-tight">Únete a La Oficina</h3>
+                                    <p className="text-[10px] text-oficina-gris font-bold uppercase tracking-widest">Recibe promociones y beneficios exclusivos</p>
+                                </div>
+
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] uppercase font-bold text-oficina-verde/60 ml-1">Nombre Completo</label>
+                                        <input 
+                                            required
+                                            type="text"
+                                            className="w-full bg-white border border-oficina-verde/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-oficina-verde transition-colors"
+                                            placeholder="Ej: Marlon Tangarife"
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] uppercase font-bold text-oficina-verde/60 ml-1">Número de Celular</label>
+                                        <input 
+                                            required
+                                            type="tel"
+                                            className="w-full bg-white border border-oficina-verde/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-oficina-verde transition-colors"
+                                            placeholder="300 000 0000"
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                        />
+                                    </div>
+                                    
+                                    <div className="flex gap-3 pt-2">
+                                        <input 
+                                            required
+                                            id="consent"
+                                            type="checkbox" 
+                                            className="mt-1 h-4 w-4 rounded"
+                                            checked={formData.consent}
+                                            onChange={(e) => setFormData({...formData, consent: e.target.checked})}
+                                        />
+                                        <label htmlFor="consent" className="text-[9px] text-oficina-verde/70 leading-relaxed font-medium">
+                                            Acepto que mis datos se utilicen con fines comerciales y para recibir promociones de LA OFICINA Coffee Bar vía SMS.
+                                        </label>
+                                    </div>
+
+                                    <button 
+                                        disabled={status === 'loading'}
+                                        type="submit"
+                                        className="w-full bg-oficina-verde text-oficina-bg font-black py-4 rounded-xl uppercase tracking-[0.2em] text-[11px] shadow-lg shadow-oficina-verde/20 active:scale-95 transition-all disabled:opacity-50 mt-4"
+                                    >
+                                        {status === 'loading' ? 'Procesando...' : 'Registrarme ahora'}
+                                    </button>
+                                </form>
+                            </>
+                        )}
+                    </div>
+                </div>
+            );
+        };
 
         const ProductGridItem = ({ product, onClick }) => (
             <div className="cursor-pointer group flex flex-col h-full" onClick={() => onClick(product)}>
@@ -151,6 +291,7 @@
             const [isLoading, setIsLoading] = useState(true);
             const [activeCategory, setActiveCategory] = useState('');
             const [selectedProduct, setSelectedProduct] = useState(null);
+            const [isRegOpen, setIsRegOpen] = useState(false);
 
             useEffect(() => {
                 const unsubInv = db.collection('inventory').onSnapshot(snap => setInventory(snap.docs.map(doc => doc.data())));
@@ -195,16 +336,36 @@
 
             return (
                 <div className="relative min-h-screen pb-24 max-w-md mx-auto bg-oficina-bg shadow-inner overflow-hidden">
-                    
                     <header className="relative bg-oficina-bg pb-10 pt-16 px-6 z-20 flex flex-col items-center text-center">
+                        <button 
+                            onClick={() => setIsRegOpen(true)}
+                            className="absolute top-6 left-6 flex items-center gap-1.5 text-oficina-verde/40 hover:text-oficina-verde transition-colors"
+                        >
+                            <UserPlus size={14} />
+                            <span className="text-[8px] font-black uppercase tracking-widest">Club Oficina</span>
+                        </button>
+
                         <LogoOficina className="w-24 h-24 mb-2" />
-                        <div className="mb-8">
+                        <div className="mb-6">
                             <h1 className="font-[200] text-2xl tracking-[0.4em] uppercase text-oficina-verde mb-1">La Oficina</h1>
                             <p className="font-[200] text-[10px] tracking-[0.5em] uppercase text-oficina-gris">Coffee Bar</p>
                         </div>
-                        <div className="flex items-center justify-center gap-2 text-[9px] uppercase tracking-widest text-oficina-verde/60 border border-oficina-verde/10 px-4 py-1.5 rounded-full bg-white/20">
-                            <span className="w-1.5 h-1.5 rounded-full bg-oficina-verde animate-pulse"></span>
-                            Catálogo en Vivo
+                        
+                        <div className="flex flex-col gap-3 items-center">
+                            <div className="flex items-center justify-center gap-2 text-[9px] uppercase tracking-widest text-oficina-verde/60 border border-oficina-verde/10 px-4 py-1.5 rounded-full bg-white/20">
+                                <span className="w-1.5 h-1.5 rounded-full bg-oficina-verde animate-pulse"></span>
+                                Catálogo en Vivo
+                            </div>
+
+                            <a 
+                                href="https://instagram.com/laoficinaanserma" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 bg-oficina-verde text-oficina-bg px-5 py-2 rounded-full shadow-lg hover:scale-105 transition-transform active:scale-95"
+                            >
+                                <Instagram size={14} />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Siguenos en intagram</span>
+                            </a>
                         </div>
                     </header>
 
@@ -239,15 +400,28 @@
                         })}
                     </div>
 
-                    <div className="pt-20 pb-12 flex flex-col items-center opacity-40">
-                        <LogoOficina className="w-10 h-10 mb-1" />
-                        <p className="font-[200] text-[7px] tracking-[0.3em] uppercase text-oficina-verde">La Oficina Coffee Bar</p>
+                    <div className="pt-20 pb-12 flex flex-col items-center gap-6">
+                        <div className="flex flex-col items-center opacity-40">
+                            <LogoOficina className="w-10 h-10 mb-1" />
+                            <p className="font-[200] text-[7px] tracking-[0.3em] uppercase text-oficina-verde">La Oficina Coffee Bar</p>
+                        </div>
+                        
+                        <a 
+                            href="https://instagram.com/laoficinaanserma" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 border border-oficina-verde/30 text-oficina-verde px-6 py-2.5 rounded-xl hover:bg-oficina-verde hover:text-white transition-colors"
+                        >
+                            <Instagram size={16} />
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Visítanos en Instagram</span>
+                        </a>
                     </div>
 
                     {selectedProduct && (
                         <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
                     )}
 
+                    <RegistrationModal isOpen={isRegOpen} onClose={() => setIsRegOpen(false)} />
                 </div>
             );
         };
