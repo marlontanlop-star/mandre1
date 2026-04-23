@@ -180,8 +180,8 @@
                         ) : (
                             <>
                                 <div className="mb-8">
-                                    <h3 className="text-xl font-black text-oficina-verde uppercase tracking-tight">Únete a La Oficina</h3>
-                                    <p className="text-[10px] text-oficina-gris font-bold uppercase tracking-widest">Recibe promociones y beneficios exclusivos</p>
+                                    <h3 className="text-xl font-black text-oficina-verde uppercase tracking-tight">El Club de La Oficina</h3>
+                                    <p className="text-[10px] text-oficina-gris font-bold uppercase tracking-widest">Accede a descuentos VIP y promociones imperdibles</p>
                                 </div>
 
                                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -191,7 +191,7 @@
                                             required
                                             type="text"
                                             className="w-full bg-white border border-oficina-verde/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-oficina-verde transition-colors"
-                                            placeholder="Ej: Marlon Tangarife"
+                                            placeholder="Ej: Juanito P"
                                             value={formData.name}
                                             onChange={(e) => setFormData({...formData, name: e.target.value})}
                                         />
@@ -292,6 +292,7 @@
             const [activeCategory, setActiveCategory] = useState('');
             const [selectedProduct, setSelectedProduct] = useState(null);
             const [isRegOpen, setIsRegOpen] = useState(false);
+            const [showInvite, setShowInvite] = useState(false);
 
             useEffect(() => {
                 const unsubInv = db.collection('inventory').onSnapshot(snap => setInventory(snap.docs.map(doc => doc.data())));
@@ -300,6 +301,13 @@
                     setIsLoading(false);
                 });
                 return () => { unsubInv(); unsubComb(); };
+            }, []);
+
+            useEffect(() => {
+                const timer = setTimeout(() => {
+                    setShowInvite(true);
+                }, 3000);
+                return () => clearTimeout(timer);
             }, []);
 
             const displayInventory = useMemo(() => [...inventory, ...combos], [inventory, combos]);
@@ -419,6 +427,36 @@
 
                     {selectedProduct && (
                         <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+                    )}
+
+                    {showInvite && !isRegOpen && (
+                        <div className="fixed bottom-4 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[400px] z-50 bg-oficina-verde text-oficina-bg p-5 rounded-2xl shadow-2xl animate-slideUp border border-oficina-bg/20 flex flex-col gap-3">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <h4 className="font-black text-[14px] uppercase tracking-widest mb-1 flex items-center gap-2">
+                                        <span>🎁</span> ¡Únete y Gana!
+                                    </h4>
+                                    <p className="text-[10px] opacity-90 leading-relaxed pr-2">
+                                        Regístrate en nuestro Club y accede a <strong>descuentos increíbles y promociones exclusivas</strong> antes que nadie.
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={() => setShowInvite(false)}
+                                    className="text-oficina-bg/50 hover:text-oficina-bg transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setShowInvite(false);
+                                    setIsRegOpen(true);
+                                }}
+                                className="w-full bg-oficina-bg text-oficina-verde text-[11px] font-black py-3 rounded-xl uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-95 transition-all mt-1"
+                            >
+                                Ver promociones ahora
+                            </button>
+                        </div>
                     )}
 
                     <RegistrationModal isOpen={isRegOpen} onClose={() => setIsRegOpen(false)} />
