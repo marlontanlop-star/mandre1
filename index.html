@@ -314,7 +314,19 @@
 
             useEffect(() => {
                 if (displayInventory.length > 0) {
-                    const exactCategories = ["CAFE", "BEBIDAS ALCOHOLICAS", "PARA COMER", "Combos"];
+                    // --- NUEVA LISTA DE CATEGORÍAS ACTUALIZADA ---
+                    const exactCategories = [
+                        "CAFE", 
+                        "INFUSIONES", 
+                        "REFRESCANTES", 
+                        "CACAO Y LACTEOS", 
+                        "PARA COMER", 
+                        "COCKTAILS", 
+                        "CERVEZAS", 
+                        "PARA BRINDAR",
+                        "Combos"
+                    ];
+                    
                     const categoriesWithProducts = exactCategories.filter(cat => 
                         displayInventory.some(item => item.category === cat)
                     );
@@ -421,7 +433,7 @@
                             className="flex items-center gap-2 border border-oficina-verde/30 text-oficina-verde px-6 py-2.5 rounded-xl hover:bg-oficina-verde hover:text-white transition-colors"
                         >
                             <Instagram size={16} />
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Visítanos en Instagram</span>
+                            <span className="text-[9px] font-black uppercase tracking-2em">Visítanos en Instagram</span>
                         </a>
                     </div>
 
