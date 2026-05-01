@@ -191,6 +191,19 @@
         const RegistrationModal = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({ name: '', phone: '', consent: false });
     const [status, setStatus] = useState('idle');
+    
+    // 1. Crear una referencia para el fondo del formulario
+    const bottomRef = React.useRef(null);
+
+    // 2. Función para desplazar la vista cuando se toca un input
+    const scrollToBottom = () => {
+        setTimeout(() => {
+            if (bottomRef.current) {
+                // Desplaza el modal suavemente hacia el botón
+                bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 300); // Retraso de 300ms para dar tiempo a que el teclado virtual termine de subir
+    };
 
     const sendWelcomeSMS = async (phone, name) => {
         const firstName = name.split(' ')[0];
@@ -239,15 +252,11 @@
     if (!isOpen) return null;
 
     return (
-        /* CAMBIO: Agregamos flex-col y aseguramos que el fondo cubra todo */
-        <div className="fixed inset-0 z-[60] bg-oficina-dark/40 backdrop-blur-sm flex flex-col items-end sm:items-center justify-end sm:justify-center p-0 sm:p-4 animate-fadeIn">
+        <div className="fixed inset-0 z-[60] bg-oficina-dark/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
             
-            {/* CAMBIO: max-h-[90dvh] para que no choque con el techo y overflow-y-auto para el scroll */}
-            <div className="bg-oficina-bg w-full max-w-md rounded-t-[2rem] sm:rounded-[2rem] p-8 shadow-2xl animate-slideUp relative overflow-y-auto max-h-[90dvh]">
-                
-                <button onClick={onClose} className="absolute top-6 right-6 text-oficina-verde/40 z-10">
-                    <X size={24}/>
-                </button>
+            {/* 3. Modal con altura máxima (max-h-[85vh]) y scroll (overflow-y-auto) */}
+            <div className="bg-oficina-bg w-full max-w-md rounded-t-[2rem] sm:rounded-[2rem] p-8 shadow-2xl animate-slideUp relative overflow-y-auto max-h-[85vh]">
+                <button onClick={onClose} className="absolute top-6 right-6 text-oficina-verde/40"><X size={24}/></button>
                 
                 {status === 'success' ? (
                     <div className="py-12 text-center space-y-4">
@@ -264,8 +273,7 @@
                             <p className="text-[10px] text-oficina-gris font-bold uppercase tracking-widest">Accede a descuentos VIP y promociones imperdibles</p>
                         </div>
 
-                        {/* CAMBIO: Añadimos pb-6 para dar espacio extra al final del formulario */}
-                        <form onSubmit={handleSubmit} className="space-y-4 pb-6">
+                        <form onSubmit={handleSubmit} className="space-y-4 pb-4">
                             <div className="space-y-1">
                                 <label className="text-[9px] uppercase font-bold text-oficina-verde/60 ml-1">Nombre Completo</label>
                                 <input 
@@ -275,6 +283,7 @@
                                     placeholder="Ej: Juanito P"
                                     value={formData.name}
                                     onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                    onFocus={scrollToBottom} /* Dispara el evento al tocar */
                                 />
                             </div>
                             <div className="space-y-1">
@@ -286,6 +295,7 @@
                                     placeholder="300 000 0000"
                                     value={formData.phone}
                                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                    onFocus={scrollToBottom} /* Dispara el evento al tocar */
                                 />
                             </div>
                             
@@ -310,6 +320,9 @@
                             >
                                 {status === 'loading' ? 'Procesando...' : 'Registrarme ahora'}
                             </button>
+                            
+                            {/* 4. Elemento invisible ancla para el scroll */}
+                            <div ref={bottomRef} className="h-2 w-full"></div>
                         </form>
                     </>
                 )}
