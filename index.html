@@ -188,22 +188,11 @@
             );
         };
 
-        const RegistrationModal = ({ isOpen, onClose }) => {
+       const RegistrationModal = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({ name: '', phone: '', consent: false });
     const [status, setStatus] = useState('idle');
-    
-    // 1. Crear una referencia para el fondo del formulario
-    const bottomRef = React.useRef(null);
-
-    // 2. Función para desplazar la vista cuando se toca un input
-    const scrollToBottom = () => {
-        setTimeout(() => {
-            if (bottomRef.current) {
-                // Desplaza el modal suavemente hacia el botón
-                bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }, 300); // Retraso de 300ms para dar tiempo a que el teclado virtual termine de subir
-    };
+    // Nuevo estado para detectar cuando el usuario está escribiendo
+    const [isTyping, setIsTyping] = useState(false);
 
     const sendWelcomeSMS = async (phone, name) => {
         const firstName = name.split(' ')[0];
@@ -234,9 +223,7 @@
                 ...formData,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
             await sendWelcomeSMS(formData.phone, formData.name);
-            
             setStatus('success');
             setTimeout(() => {
                 onClose();
@@ -252,11 +239,17 @@
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[60] bg-oficina-dark/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+        /* CAMBIO CLAVE: Si isTyping es true, usamos items-start y pt-4 para subir el modal */
+        <div className={`fixed inset-0 z-[60] bg-oficina-dark/40 backdrop-blur-sm flex justify-center p-0 sm:p-4 animate-fadeIn transition-all duration-300
+            ${isTyping ? 'items-start pt-4' : 'items-end sm:items-center'}`}>
             
-            {/* 3. Modal con altura máxima (max-h-[85vh]) y scroll (overflow-y-auto) */}
-            <div className="bg-oficina-bg w-full max-w-md rounded-t-[2rem] sm:rounded-[2rem] p-8 shadow-2xl animate-slideUp relative overflow-y-auto max-h-[85vh]">
-                <button onClick={onClose} className="absolute top-6 right-6 text-oficina-verde/40"><X size={24}/></button>
+            <div className="bg-oficina-bg w-full max-w-md rounded-t-[2rem] sm:rounded-[2rem] p-8 shadow-2xl animate-slideUp relative overflow-y-auto max-h-[90dvh]">
+                <button 
+                    onClick={() => { setIsTyping(false); onClose(); }} 
+                    className="absolute top-6 right-6 text-oficina-verde/40"
+                >
+                    <X size={24}/>
+                </button>
                 
                 {status === 'success' ? (
                     <div className="py-12 text-center space-y-4">
@@ -268,22 +261,23 @@
                     </div>
                 ) : (
                     <>
-                        <div className="mb-8">
+                        <div className="mb-6">
                             <h3 className="text-xl font-black text-oficina-verde uppercase tracking-tight">El Club de La Oficina</h3>
-                            <p className="text-[10px] text-oficina-gris font-bold uppercase tracking-widest">Accede a descuentos VIP y promociones imperdibles</p>
+                            <p className="text-[10px] text-oficina-gris font-bold uppercase tracking-widest">Accede a descuentos VIP y promociones</p>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-4 pb-4">
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-1">
                                 <label className="text-[9px] uppercase font-bold text-oficina-verde/60 ml-1">Nombre Completo</label>
                                 <input 
                                     required
                                     type="text"
-                                    className="w-full bg-white border border-oficina-verde/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-oficina-verde transition-colors"
+                                    className="w-full bg-white border border-oficina-verde/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-oficina-verde"
                                     placeholder="Ej: Juanito P"
                                     value={formData.name}
+                                    onFocus={() => setIsTyping(true)}
+                                    onBlur={() => setIsTyping(false)}
                                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                    onFocus={scrollToBottom} /* Dispara el evento al tocar */
                                 />
                             </div>
                             <div className="space-y-1">
@@ -291,11 +285,12 @@
                                 <input 
                                     required
                                     type="tel"
-                                    className="w-full bg-white border border-oficina-verde/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-oficina-verde transition-colors"
+                                    className="w-full bg-white border border-oficina-verde/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-oficina-verde"
                                     placeholder="300 000 0000"
                                     value={formData.phone}
+                                    onFocus={() => setIsTyping(true)}
+                                    onBlur={() => setIsTyping(false)}
                                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                    onFocus={scrollToBottom} /* Dispara el evento al tocar */
                                 />
                             </div>
                             
@@ -309,20 +304,17 @@
                                     onChange={(e) => setFormData({...formData, consent: e.target.checked})}
                                 />
                                 <label htmlFor="consent" className="text-[9px] text-oficina-verde/70 leading-relaxed font-medium">
-                                    Acepto que mis datos se utilicen con fines comerciales y para recibir promociones de LA OFICINA Coffee Bar vía SMS.
+                                    Acepto el uso de mis datos para recibir promociones vía SMS.
                                 </label>
                             </div>
 
                             <button 
                                 disabled={status === 'loading'}
                                 type="submit"
-                                className="w-full bg-oficina-verde text-oficina-bg font-black py-4 rounded-xl uppercase tracking-[0.2em] text-[11px] shadow-lg shadow-oficina-verde/20 active:scale-95 transition-all disabled:opacity-50 mt-4"
+                                className="w-full bg-oficina-verde text-oficina-bg font-black py-4 rounded-xl uppercase tracking-[0.2em] text-[11px] shadow-lg mt-2"
                             >
                                 {status === 'loading' ? 'Procesando...' : 'Registrarme ahora'}
                             </button>
-                            
-                            {/* 4. Elemento invisible ancla para el scroll */}
-                            <div ref={bottomRef} className="h-2 w-full"></div>
                         </form>
                     </>
                 )}
