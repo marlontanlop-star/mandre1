@@ -23,6 +23,7 @@
                         oficina: {
                             bg: '#e3e4d4',      
                             verde: '#4B5320',   
+                            claro: '#8FBC8F', 
                             gris: '#A8A899',    
                             dark: '#2d3314',    
                         }
@@ -113,6 +114,79 @@
                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" x2="20" y1="8" y2="14"/><line x1="23" x2="17" y1="11" y2="11"/>
             </IconBase>
         );
+
+        // --- COMPONENTE DE TRAZABILIDAD ---
+        const TraceabilityAnnouncement = ({ data, isOpen, onClose }) => {
+            if (!isOpen || !data) return null;
+            const cafe = data.cafePromocion || {};
+            const nombreCafe = data.publicidadRecurrente?.textoConfigurable || "Nuestro Café de Especialidad";
+
+            return (
+                <div className="fixed inset-0 z-[70] bg-oficina-dark/60 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+                    <div className="bg-oficina-bg w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-oficina-verde/20 animate-slideUp relative">
+                        <button onClick={onClose} className="absolute top-6 right-6 text-oficina-verde/40 transition-transform active:scale-90"><X size={24}/></button>
+                        
+                        <div className="p-8 flex flex-col items-center text-center">
+                            {/* Logo en Sello Circular Perfecto */}
+                            <div className="w-24 h-24 bg-white p-3 rounded-full shadow-lg mb-6 flex items-center justify-center border-4 border-oficina-claro overflow-hidden">
+                                {cafe.logoUrl ? (
+                                    <img src={cafe.logoUrl} className="w-full h-full object-contain" alt="Logo Café" />
+                                ) : (
+                                    <LogoOficina className="w-full h-full opacity-20" />
+                                )}
+                            </div>
+                            
+                            <p className="text-[10px] text-oficina-verde font-bold uppercase tracking-[0.2em] mb-2 opacity-70">
+                                Todas nuestras bebidas a base de café están elaboradas con:
+                            </p>
+                            
+                            <h3 className="text-oficina-verde font-black text-2xl uppercase tracking-tighter leading-tight mb-6">
+                                {nombreCafe}
+                            </h3>
+                            
+                            <div className="w-full space-y-2 mb-8 text-left">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="bg-white/40 p-3 rounded-xl border border-oficina-verde/5">
+                                        <span className="text-[8px] font-bold text-oficina-gris uppercase block mb-1">Vereda</span>
+                                        <span className="text-xs font-black text-oficina-verde uppercase truncate">{cafe.vereda || '---'}</span>
+                                    </div>
+                                    <div className="bg-white/40 p-3 rounded-xl border border-oficina-verde/5">
+                                        <span className="text-[8px] font-bold text-oficina-gris uppercase block mb-1">Municipio</span>
+                                        <span className="text-xs font-black text-oficina-verde uppercase">Anserma, Caldas</span>
+                                    </div>
+                                    <div className="bg-white/40 p-3 rounded-xl border border-oficina-verde/5">
+                                        <span className="text-[8px] font-bold text-oficina-gris uppercase block mb-1">Altura Cultivo</span>
+                                        <span className="text-xs font-black text-oficina-verde">{cafe.altura || '---'} MSNM</span>
+                                    </div>
+                                    <div className="bg-white/40 p-3 rounded-xl border border-oficina-verde/5">
+                                        <span className="text-[8px] font-bold text-oficina-gris uppercase block mb-1">Procesador</span>
+                                        <span className="text-xs font-black text-oficina-verde uppercase truncate">{cafe.procesador || '---'}</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-oficina-claro p-4 rounded-2xl shadow-sm">
+                                    <p className="text-[8px] font-black text-oficina-dark/60 uppercase mb-1 tracking-widest">Perfil de Taza</p>
+                                    <p className="text-sm font-black text-oficina-dark italic leading-tight">"{cafe.notas || 'Equilibrio y aroma de montaña'}"</p>
+                                </div>
+
+                                <div className="bg-white/40 p-3 rounded-xl border border-oficina-verde/5 flex justify-between items-center px-4">
+                                    <span className="text-[8px] font-bold text-oficina-gris uppercase">Día de Tueste</span>
+                                    <span className="text-xs font-black text-oficina-verde">{cafe.diaTueste || 'Reciente'}</span>
+                                </div>
+                            </div>
+
+                            <p className="text-[12px] text-oficina-verde/80 font-medium leading-tight mb-8 italic">
+                                "Honramos el sudor y la pasión de las manos que cultivan esperanza en nuestras Montañas Ansermeñas."
+                            </p>
+
+                            <button onClick={onClose} className="w-full bg-oficina-verde text-white font-black py-4 rounded-2xl uppercase tracking-[0.2em] text-[11px] shadow-lg active:scale-95 transition-all">
+                                Explorar Catálogo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
         const RegistrationModal = ({ isOpen, onClose }) => {
             const [formData, setFormData] = useState({ name: '', phone: '', consent: false });
@@ -293,6 +367,10 @@
             const [selectedProduct, setSelectedProduct] = useState(null);
             const [isRegOpen, setIsRegOpen] = useState(false);
             const [showInvite, setShowInvite] = useState(false);
+            
+            // --- ESTADOS TRAZABILIDAD ---
+            const [tvConfig, setTvConfig] = useState(null);
+            const [showTraceability, setShowTraceability] = useState(false);
 
             useEffect(() => {
                 const unsubInv = db.collection('inventory').onSnapshot(snap => setInventory(snap.docs.map(doc => doc.data())));
@@ -300,7 +378,16 @@
                     setCombos(snap.docs.map(doc => doc.data()));
                     setIsLoading(false);
                 });
-                return () => { unsubInv(); unsubComb(); };
+                
+                // Escucha de configuración de trazabilidad desde Firebase
+                const unsubConfig = db.collection('configuracionTV').doc('actual').onSnapshot(doc => {
+                    if (doc.exists) {
+                        setTvConfig(doc.data());
+                        setShowTraceability(true);
+                    }
+                });
+
+                return () => { unsubInv(); unsubComb(); unsubConfig(); };
             }, []);
 
             useEffect(() => {
@@ -314,7 +401,6 @@
 
             useEffect(() => {
                 if (displayInventory.length > 0) {
-                    // --- NUEVA LISTA DE CATEGORÍAS ACTUALIZADA ---
                     const exactCategories = [
                         "CAFE", 
                         "INFUSIONES", 
@@ -472,6 +558,13 @@
                     )}
 
                     <RegistrationModal isOpen={isRegOpen} onClose={() => setIsRegOpen(false)} />
+
+                    {/* --- ANUNCIO DE TRAZABILIDAD --- */}
+                    <TraceabilityAnnouncement 
+                        data={tvConfig} 
+                        isOpen={showTraceability} 
+                        onClose={() => setShowTraceability(false)} 
+                    />
                 </div>
             );
         };
