@@ -200,7 +200,7 @@
             );
         };
 
-        // --- COMPONENTE: PORTAL SECRETO PARA LA BARRA ---
+        // --- COMPONENTE: PORTAL SECRETO DE CONFIGURACIÓN ---
         const SecretPortalModal = ({ isOpen, onClose }) => {
             const [newLink, setNewLink] = useState('');
             const [status, setStatus] = useState('idle');
@@ -210,6 +210,7 @@
                 if (!newLink.trim()) return;
                 setStatus('saving');
                 try {
+                    // Guarda el link directamente en Firestore para sincronización instantánea
                     await db.collection('configuracionGeneral').doc('spotify').set({
                         jamLink: newLink,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -224,7 +225,7 @@
                 } catch (error) {
                     console.error("Error al guardar link:", error);
                     setStatus('idle');
-                    alert("Error al guardar en Firebase");
+                    alert("Error crítico al intentar guardar en Firebase");
                 }
             };
 
@@ -246,13 +247,13 @@
                                 required 
                                 type="url"
                                 className="w-full bg-oficina-bg p-5 rounded-2xl outline-none text-xs font-bold text-oficina-dark" 
-                                placeholder="Pega el nuevo enlace de Spotify aquí..." 
+                                placeholder="Pega el nuevo enlace del Jam de Spotify..." 
                                 value={newLink} 
                                 onChange={e => setNewLink(e.target.value)} 
                             />
                             
                             <button type="submit" className="w-full bg-oficina-verde text-white font-black py-5 rounded-2xl uppercase tracking-[0.2em] shadow-xl text-xs">
-                                {status === 'saving' ? 'Guardando...' : status === 'success' ? '¡Enlace Cambiado! ✓' : 'Actualizar Link'}
+                                {status === 'saving' ? 'Guardando en la nube...' : status === 'success' ? '¡Enlace Cambiado! ✓' : 'Actualizar Link'}
                             </button>
                         </form>
                     </div>
@@ -260,7 +261,7 @@
             );
         };
 
-        // --- COMPONENTE PRINCIPAL APP ---
+        // --- COMPONENTE PRINCIPAL DE LA APLICACIÓN ---
         const App = () => {
             const [data, setData] = useState({ inventory: [], combos: [] });
             const [isLoading, setIsLoading] = useState(true);
@@ -269,10 +270,10 @@
             const [tvConfig, setTvConfig] = useState(null);
             const [showStory, setShowStory] = useState(false);
             
-            // Estados del Menú Secreto (Huevo de Pascua)
+            // Estados añadidos para el huevo de pascua
             const [logoClicks, setLogoClicks] = useState(0);
             const [isSecretOpen, setIsSecretOpen] = useState(false);
-            const [spotifyLink, setSpotifyLink] = useState('https://spotify.link/2O9zOMPBa3b'); // Fallback inicial
+            const [spotifyLink, setSpotifyLink] = useState('https://spotify.link/2O9zOMPBa3b'); // Enlace base inicial
 
             useEffect(() => {
                 const unsubInv = db.collection('inventory').onSnapshot(snap => {
@@ -288,7 +289,7 @@
                     if (doc.exists) { setTvConfig(doc.data()); setShowStory(true); }
                 });
                 
-                // Escucha activa del link guardado dinámicamente
+                // OYENTE EN TIEMPO REAL: Si cambia el link en el portal secreto, cambia instantáneamente aquí
                 const unsubSpotify = db.collection('configuracionGeneral').doc('spotify').onSnapshot(doc => {
                     if (doc.exists && doc.data().jamLink) {
                         setSpotifyLink(doc.data().jamLink);
@@ -298,7 +299,7 @@
                 return () => { unsubInv(); unsubComb(); unsubConfig(); unsubSpotify(); };
             }, []);
 
-            // Capturador de toques rápidos en el logotipo
+            // Contador de clics en el Logotipo
             const handleLogoTouch = () => {
                 setLogoClicks(prev => {
                     const currentCount = prev + 1;
@@ -306,7 +307,7 @@
                         setIsSecretOpen(true);
                         return 0; 
                     }
-                    // Si se detienen por más de 4 segundos, se resetea la cuenta por seguridad
+                    // Resetea el contador si se detienen por más de 4 segundos
                     setTimeout(() => setLogoClicks(0), 4000);
                     return currentCount;
                 });
@@ -327,7 +328,7 @@
                     <header className="pt-16 pb-10 px-6 text-center">
                         <button onClick={() => setIsRegOpen(true)} className="absolute top-8 left-6 flex items-center gap-2 text-oficina-verde/40 font-black text-[9px] uppercase tracking-widest border border-oficina-verde/10 px-4 py-2 rounded-full">🎁 Club VIP</button>
                         
-                        {/* Envoltura interactiva para activar el modal */}
+                        {/* El logo envuelto en el disparador táctil secreto */}
                         <div onClick={handleLogoTouch} className="cursor-pointer inline-block active:scale-95 transition-transform select-none">
                             <LogoOficina className="w-20 h-20 mx-auto mb-4 text-oficina-verde" />
                         </div>
@@ -335,6 +336,7 @@
                         <h1 className="text-3xl font-black uppercase tracking-tighter mb-8">La Oficina</h1>
                         
                         <div className="space-y-4">
+                            {/* El enlace de abajo lee directamente de la base de datos en tiempo real */}
                             <a href={spotifyLink} target="_blank" rel="noopener noreferrer" className="w-full bg-black rounded-[2rem] p-5 flex items-center gap-4 relative overflow-hidden group shadow-2xl">
                                 <div className="relative w-12 h-12 flex-shrink-0 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 animate-spin-slow">
                                     <div className="w-3 h-3 bg-black rounded-full"></div>
@@ -371,7 +373,7 @@
                     <TraceabilityStory data={tvConfig} isOpen={showStory} onClose={closeStoryAndInvite} />
                     <RegistrationModal isOpen={isRegOpen} onClose={() => setIsRegOpen(false)} />
                     
-                    {/* Render de modales de control interno */}
+                    {/* Modales de Control */}
                     <SecretPortalModal isOpen={isSecretOpen} onClose={() => setIsSecretOpen(false)} />
                     
                     {!showStory && (
