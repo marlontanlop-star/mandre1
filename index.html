@@ -3,62 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>La Oficina | Menú & Feed Social</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+    <title>La Oficina Coffee Bar</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        oficina: {
-                            bg: '#f4f4ee',      
-                            verde: '#014025',   
-                            accent: '#D4AF37',  
-                            dark: '#002616',    
-                        },
-                        insta: {
-                            heart: '#ED4956',
-                            bubble: '#262626'
-                        }
-                    },
-                    animation: {
-                        'slideUp': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'spin-slow': 'spin 8s linear infinite',
-                        'bar': 'barHeight 1.2s ease-in-out infinite',
-                        'heartBeat': 'heartBeat 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
-                    },
-                    keyframes: {
-                        slideUp: { '0%': { transform: 'translateY(100%)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
-                        heartBeat: { '0%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.3)' }, '100%': { transform: 'scale(1)' } },
-                        barHeight: { '0%': { height: '4px' }, '50%': { height: '16px' }, '100%': { height: '4px' } }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Montserrat', sans-serif; background-color: #f4f4ee; color: #014025; }
-        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        :root { --green: #2d5a27; }
+        
+        * { box-sizing: border-box; margin:0; padding:0; }
+        body {
+            background: #f8f8f8;
+            color: #1a1a1a;
+            font-family: 'Montserrat', sans-serif;
+            padding-bottom: 70px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 20px 18px;
+            background: white;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+        }
+        
+        #categories {
+            display: flex;
+            overflow-x: auto;
+            padding: 12px 10px;
+            gap: 10px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            scrollbar-width: none;
+        }
+        #categories::-webkit-scrollbar { display: none; }
+        
+        .cat-pill {
+            padding: 11px 20px;
+            font-size: 14.5px;
+            font-weight: 600;
+            color: var(--green);
+            border: 2px solid var(--green);
+            border-radius: 50px;
+            white-space: nowrap;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .cat-pill.active {
+            background: var(--green);
+            color: white;
+        }
+        
+        .feed {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 12px 10px;
+        }
+        
+        .post {
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+            margin-bottom: 26px;
+            box-shadow: 0 5px 18px rgba(0,0,0,0.08);
+        }
+        
+        .post-img-container {
+            position: relative;
+            width: 100%;
+            padding-top: 125%;
+        }
+        
+        .post img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        
+        .post-info {
+            padding: 18px;
+        }
+        
+        .post-info h3 {
+            font-size: 17.5px;
+            font-weight: 700;
+            margin-bottom: 7px;
+        }
+        
+        .post-info p {
+            font-size: 14.5px;
+            color: #555;
+            line-height: 1.45;
+        }
+        
+        .price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--green);
+            margin-top: 14px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 20px 20px;
+            color: #777;
+            font-size: 13px;
+        }
     </style>
 </head>
-<body class="bg-oficina-bg text-oficina-verde">
-    <div id="root"></div>
+<body>
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+    <header>
+        <!-- Logo solo texto - versión elegante -->
+        <svg width="300" height="110" viewBox="0 0 320 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="160" y="55" font-family="Montserrat" font-size="31" font-weight="700" fill="#2d5a27" letter-spacing="-1.8px" text-anchor="middle">LA OFICINA</text>
+            <text x="160" y="80" font-family="Montserrat" font-size="11.5" font-weight="600" fill="#2d5a27" letter-spacing="5.5px" text-anchor="middle">COFFEE BAR</text>
+        </svg>
+    </header>
 
+    <div id="categories"></div>
+    <div id="menu-container" class="feed"></div>
+
+    <footer>
+        LA OFICINA COFFEE BAR
+    </footer>
+
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAutOqky0mpVmwDrqFsyZ0zRl_abrzgPvc",
             authDomain: "mandre-f9e43.firebaseapp.com",
@@ -68,453 +139,55 @@
             appId: "1:865403538422:web:0ee2fb754343de9bc015d7"
         };
 
-        const HABLAME_CONFIG = {
-            apiKey: "HHajMRAMKfQrSqkw4WA5dwuWh8xl9RJDeyQTanQJDKXpCLOgPzNEDF1hnY93zd39Ge7tXt20b3nTsMEocV6B0ibTIrvxmgjtN1OmUguZGja4zkABwNW0GdUqmoJ67Zq6",
-            endpoint: "https://api103.hablame.co/api/sms/v3/send/marketing"
-        };
-
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        let allProducts = [];
 
-        const LogoOficina = ({ className }) => (
-            <svg className={className} viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M100,70 c10,-20, -10,-40, 0,-60" stroke="currentColor" strokeWidth="8" strokeLinecap="round" className="opacity-30" />
-                <path d="M40,95 h120 c0,0,0,60-60,60 S40,95,40,95 z" stroke="currentColor" strokeWidth="10" strokeLinejoin="round" />
-                <path d="M160,105 c15,0,25,10,25,22 s-10,22-25,22" stroke="currentColor" strokeWidth="10" />
-            </svg>
-        );
+        function renderMenu(items) {
+            const container = document.getElementById('menu-container');
+            container.innerHTML = items.map(p => `
+                <div class="post">
+                    <div class="post-img-container">
+                        <img src="${p.imageUrl || 'https://via.placeholder.com/600x750/eeeeee/2d5a27?text=La+Oficina'}" alt="${p.name}">
+                    </div>
+                    <div class="post-info">
+                        <h3>${p.name}</h3>
+                        <p>${p.description || ''}</p>
+                        <div class="price">$${Number(p.price).toLocaleString('es-CO')}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-        // --- COMPONENTE: TARJETA ESTILO INSTAGRAM ---
-        const InstagramPost = ({ product }) => {
-            const [likesCount, setLikesCount] = useState(0);
-            const [hasLiked, setHasLiked] = useState(false);
-            const [comments, setComments] = useState([]);
-            const [showCommentBox, setShowCommentBox] = useState(false);
-            const [author, setAuthor] = useState('');
-            const [newComment, setNewComment] = useState('');
-            const [animateHeart, setAnimateHeart] = useState(false);
+        db.collection('inventory').onSnapshot(snap => {
+            allProducts = [];
+            let cats = new Set(['TODOS']);
 
-            useEffect(() => {
-                if (!product || !product.id) return;
-
-                setLikesCount(Number(product.likes) || 0);
-
-                const unsubProduct = db.collection(product.isCombo ? 'combos' : 'inventory').doc(product.id)
-                    .onSnapshot(doc => {
-                        if (doc.exists && doc.data()) {
-                            setLikesCount(Number(doc.data().likes) || 0);
-                        }
-                    }, err => console.log("Error de likes:", err));
-
-                const unsubComments = db.collection('inventory_interactions').doc(product.id).collection('comments')
-                    .orderBy('createdAt', 'asc')
-                    .onSnapshot(snap => {
-                        if (snap) {
-                            const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                            setComments(list);
-                        }
-                    }, err => console.log("Error de comentarios:", err));
-
-                const localLiked = localStorage.getItem(`liked_${product.id}`);
-                if (localLiked) setHasLiked(true);
-
-                return () => { unsubProduct(); unsubComments(); };
-            }, [product]);
-
-            const handleLike = async () => {
-                const productRef = db.collection(product.isCombo ? 'combos' : 'inventory').doc(product.id);
-                setAnimateHeart(true);
-                setTimeout(() => setAnimateHeart(false), 300);
-
-                try {
-                    if (!hasLiked) {
-                        setHasLiked(true);
-                        localStorage.setItem(`liked_${product.id}`, 'true');
-                        await productRef.set({ likes: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                    } else {
-                        setHasLiked(false);
-                        localStorage.removeItem(`liked_${product.id}`);
-                        const targetLikes = likesCount > 0 ? likesCount - 1 : 0;
-                        await productRef.set({ likes: targetLikes }, { merge: true });
-                    }
-                } catch (e) {
-                    console.error(e);
+            snap.forEach(doc => {
+                const p = doc.data();
+                if (p.showOnTv !== false) {
+                    allProducts.push(p);
+                    if (p.category) cats.add(p.category.toUpperCase());
                 }
-            };
+            });
 
-            const handleCommentSubmit = async (e) => {
-                e.preventDefault();
-                if (!newComment.trim() || !author.trim()) return;
+            const catHTML = Array.from(cats).map(c => 
+                `<div class="cat-pill ${c==='TODOS'?'active':''}" onclick="filterMenu('${c}')">${c}</div>`
+            ).join('');
+            document.getElementById('categories').innerHTML = catHTML;
 
-                const commentData = {
-                    author: author.trim(),
-                    text: newComment.trim(),
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
+            renderMenu(allProducts);
+        });
 
-                try {
-                    await db.collection('inventory_interactions').doc(product.id).collection('comments').add(commentData);
-                    setNewComment('');
-                    localStorage.setItem('social_author_name', author.trim());
-                } catch (err) {
-                    console.error(err);
-                }
-            };
-
-            useEffect(() => {
-                const savedName = localStorage.getItem('social_author_name');
-                if (savedName) setAuthor(savedName);
-            }, []);
-
-            return (
-                <div className="bg-white border border-oficina-verde/5 rounded-[2.5rem] overflow-hidden shadow-sm mb-8">
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-5 py-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-oficina-bg rounded-full border border-oficina-accent flex items-center justify-center text-oficina-verde">
-                                <LogoOficina className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h4 className="text-xs font-black uppercase tracking-tight text-oficina-verde">La Oficina</h4>
-                                <p className="text-[9px] font-bold text-oficina-accent tracking-widest uppercase">{product.category || "Menú"}</p>
-                            </div>
-                        </div>
-                        <span className="text-sm font-black text-oficina-verde bg-oficina-bg px-4 py-1.5 rounded-full">${product.price ? product.price.toLocaleString() : '0'}</span>
-                    </div>
-
-                    {/* Foto */}
-                    <div className="w-full aspect-square bg-oficina-bg relative overflow-hidden flex items-center justify-center select-none" onDoubleClick={handleLike}>
-                        {product.imageUrl ? (
-                            <img src={product.imageUrl} className="w-full h-full object-cover" alt={product.name} />
-                        ) : (
-                            <LogoOficina className="w-1/2 h-1/2 opacity-5 text-oficina-verde" />
-                        )}
-                    </div>
-
-                    {/* Botones de Acción */}
-                    <div className="px-5 pt-4 pb-2 flex items-center gap-4">
-                        <button onClick={handleLike} className={`focus:outline-none ${animateHeart ? 'animate-heartBeat' : 'active:scale-90 transition-transform'}`}>
-                            <svg width="26" height="26" viewBox="0 0 24 24" fill={hasLiked ? "#ED4956" : "none"} stroke={hasLiked ? "#ED4956" : "currentColor"} strokeWidth="2.2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                            </svg>
-                        </button>
-                        <button onClick={() => setShowCommentBox(!showCommentBox)} className="focus:outline-none active:scale-90 transition-transform">
-                            <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-                            </svg>
-                        </button>
-                    </div>
-
-                    {/* Descripción */}
-                    <div className="px-5 pb-3">
-                        <p className="text-xs font-black text-oficina-dark mb-1">{(likesCount || 0).toLocaleString()} {likesCount === 1 ? 'Me gusta' : 'Me gustas'}</p>
-                        <p className="text-xs text-oficina-dark/80 leading-relaxed font-medium">
-                            <span className="font-black text-oficina-verde uppercase mr-2 tracking-tight">{product.name}</span>
-                            {product.description || "Disponible en nuestra barra para disfrutar ahora."}
-                        </p>
-                    </div>
-
-                    {/* Comentarios */}
-                    <div className="px-5 pb-4 border-t border-oficina-bg pt-3 bg-oficina-bg/20">
-                        {comments && comments.length > 0 ? (
-                            <div className="space-y-2 max-h-36 overflow-y-auto scrollbar-hide mb-3">
-                                {comments.map(c => (
-                                    <div key={c.id} className="text-[11px] leading-tight">
-                                        <span className="font-black text-oficina-verde uppercase mr-1.5">{c.author}</span>
-                                        <span className="text-oficina-dark/90 font-medium">{c.text}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-[10px] font-bold text-oficina-verde/40 uppercase tracking-tight mb-2">Sin opiniones aún...</p>
-                        )}
-
-                        {showCommentBox ? (
-                            <form onSubmit={handleCommentSubmit} className="space-y-2 mt-2 border-t border-oficina-bg/50 pt-2 animate-slideUp">
-                                <div className="grid grid-cols-3 gap-2">
-                                    <input required type="text" className="col-span-1 bg-white border border-oficina-verde/10 p-2 rounded-xl text-[10px] font-black outline-none" placeholder="Tu Nombre" value={author} onChange={e => setAuthor(e.target.value)} />
-                                    <input required type="text" className="col-span-2 bg-white border border-oficina-verde/10 p-2 rounded-xl text-[10px] font-medium outline-none" placeholder="Comentar..." value={newComment} onChange={e => setNewComment(e.target.value)} />
-                                </div>
-                                <div className="flex justify-end gap-2">
-                                    <button type="button" onClick={() => setShowCommentBox(false)} className="text-[9px] font-black uppercase text-oficina-verde/50">X</button>
-                                    <button type="submit" className="text-[9px] font-black uppercase bg-oficina-verde px-3 py-1.5 rounded-xl text-white shadow">Enviar</button>
-                                </div>
-                            </form>
-                        ) : (
-                            <button onClick={() => setShowCommentBox(true)} className="text-[10px] font-black uppercase text-oficina-accent/80 tracking-wider mt-1 hover:underline">Escribir opinión...</button>
-                        )}
-                    </div>
-                </div>
-            );
-        };
-
-        // --- MODAL DE BIENVENIDA (NUEVO) ---
-        const WelcomeModal = ({ isOpen, onClose, onOpenReg }) => {
-            if (!isOpen) return null;
-            return (
-                <div className="fixed inset-0 z-[150] bg-oficina-dark/90 backdrop-blur-md flex items-center justify-center p-6">
-                    <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 text-center animate-slideUp relative shadow-2xl">
-                        <button type="button" onClick={onClose} className="absolute top-6 right-6 opacity-40 text-oficina-verde hover:opacity-100 transition-opacity">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                        </button>
-                        
-                        <LogoOficina className="w-24 h-24 mx-auto mb-4 text-oficina-verde" />
-                        
-                        <h2 className="text-3xl font-black uppercase text-oficina-verde leading-tight mb-2">¡Hola!</h2>
-                        <p className="text-xs font-bold text-oficina-dark/70 mb-8 px-4">Únete a nuestro club para sumar puntos o acompáñanos en nuestras redes.</p>
-
-                        <div className="space-y-4">
-                            <button 
-                                onClick={() => { onClose(); onOpenReg(); }} 
-                                className="w-full bg-oficina-accent text-oficina-dark font-black py-4 rounded-2xl uppercase tracking-[0.1em] shadow-lg flex items-center justify-center gap-2 hover:scale-105 transition-transform"
-                            >
-                                🎁 Club VIP
-                            </button>
-
-                            <a 
-                                href="https://www.instagram.com/laoficinaanserma/" 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                onClick={onClose}
-                                className="w-full bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] text-white font-black py-4 rounded-2xl uppercase tracking-[0.1em] shadow-lg flex items-center justify-center gap-2 hover:scale-105 transition-transform"
-                            >
-                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                                Seguir en Instagram
-                            </a>
-                        </div>
-
-                        <div className="mt-6 pt-6 border-t border-oficina-verde/10">
-                            <button onClick={onClose} className="text-[10px] font-black uppercase tracking-widest text-oficina-verde/60 hover:text-oficina-verde transition-colors">
-                                Solo quiero ver el menú →
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        // --- MODAL REGISTRO CLUB VIP ---
-        const RegistrationModal = ({ isOpen, onClose }) => {
-            const [formData, setFormData] = useState({ name: '', phone: '', consent: false });
-            const [status, setStatus] = useState('idle');
-            const [isTyping, setIsTyping] = useState(false);
-
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                if (!formData.consent) return;
-                setStatus('loading');
-                try {
-                    await db.collection('customers').add({ ...formData, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-                    const firstName = formData.name.split(' ')[0];
-                    await fetch(HABLAME_CONFIG.endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': HABLAME_CONFIG.apiKey },
-                        body: JSON.stringify({ phone: `57${formData.phone}`, message: `Hola ${firstName}, bienvenido al Club de LA OFICINA.`, flash: 0 })
-                    });
-                    setStatus('success');
-                } catch (e) { setStatus('idle'); }
-            };
-
-            if (!isOpen) return null;
-            return (
-                <div className={`fixed inset-0 z-[120] bg-oficina-dark/80 backdrop-blur-md flex transition-all duration-300 ${isTyping ? 'items-start pt-10' : 'items-end sm:items-center'} justify-center`}>
-                    <div className="bg-white w-full max-w-md rounded-t-[3rem] p-10 animate-slideUp relative">
-                        <button type="button" onClick={onClose} className="absolute top-8 right-8 opacity-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-                        {status === 'success' ? (
-                            <div className="py-10 text-center space-y-6">
-                                <div className="w-20 h-20 bg-oficina-verde text-white rounded-full flex items-center justify-center mx-auto text-3xl">✓</div>
-                                <div className="space-y-2">
-                                    <h3 className="font-black text-oficina-verde uppercase text-xl">¡Registro Exitoso!</h3>
-                                    <p className="text-sm font-bold text-oficina-dark px-4">Dí que eres usuario registrado al pagar para acumular puntos.</p>
-                                </div>
-                                <button type="button" onClick={onClose} className="w-full bg-oficina-verde text-white font-black py-4 rounded-2xl uppercase text-[10px] tracking-widest">Entendido</button>
-                            </div>
-                        ) : (
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <h2 className="text-2xl font-black uppercase text-oficina-verde leading-tight">Club La Oficina <br/><span className="text-oficina-accent text-sm">Empieza a sumar puntos</span></h2>
-                                <input required className="w-full bg-oficina-bg p-5 rounded-2xl outline-none font-bold" placeholder="Nombre completo" value={formData.name} onFocus={() => setIsTyping(true)} onBlur={() => setIsTyping(false)} onChange={e => setFormData({...formData, name: e.target.value})} />
-                                <input required type="tel" className="w-full bg-oficina-bg p-5 rounded-2xl outline-none font-bold" placeholder="Número de Teléfono" value={formData.phone} onFocus={() => setIsTyping(true)} onBlur={() => setIsTyping(false)} onChange={e => setFormData({...formData, phone: e.target.value})} />
-                                <div className="flex gap-3 px-2">
-                                    <input required type="checkbox" className="mt-1" checked={formData.consent} onChange={e => setFormData({...formData, consent: e.target.checked})} />
-                                    <p className="text-[10px] font-bold opacity-50 uppercase tracking-tighter leading-tight">Acepto recibir promociones y alertas vía SMS.</p>
-                                </div>
-                                <button className="w-full bg-oficina-verde text-white font-black py-5 rounded-2xl uppercase tracking-[0.2em] shadow-xl">Registrarme ahora</button>
-                            </form>
-                        )}
-                    </div>
-                </div>
-            );
-        };
-
-        // --- PORTAL SECRETO ---
-        const SecretPortalModal = ({ isOpen, onClose }) => {
-            const [newLink, setNewLink] = useState('');
-            const [status, setStatus] = useState('idle');
-
-            const handleSave = async (e) => {
-                e.preventDefault();
-                if (!newLink.trim()) return;
-                setStatus('saving');
-                try {
-                    await db.collection('configuracionGeneral').doc('spotify').set({ jamLink: newLink, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-                    setStatus('success');
-                    setTimeout(() => { setStatus('idle'); setNewLink(''); onClose(); }, 1500);
-                } catch (error) { setStatus('idle'); }
-            };
-
-            if (!isOpen) return null;
-            return (
-                <div className="fixed inset-0 z-[130] bg-black/95 backdrop-blur-md flex items-center justify-center p-6">
-                    <div className="bg-white w-full max-w-md rounded-[3rem] p-10 relative animate-slideUp">
-                        <button type="button" onClick={onClose} className="absolute top-8 right-8 opacity-40 text-oficina-verde"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-                        <form onSubmit={handleSave} className="space-y-6">
-                            <h2 className="text-xl font-black uppercase text-oficina-verde leading-tight">🔒 Portal Secreto</h2>
-                            <input required type="url" className="w-full bg-oficina-bg p-5 rounded-2xl outline-none text-xs font-bold text-oficina-dark" placeholder="Enlace del Jam de Spotify..." value={newLink} onChange={e => setNewLink(e.target.value)} />
-                            <button type="submit" className="w-full bg-oficina-verde text-white font-black py-5 rounded-2xl text-xs uppercase tracking-widest">Actualizar</button>
-                        </form>
-                    </div>
-                </div>
-            );
-        };
-
-        // --- APLICACIÓN PRINCIPAL ---
-        const App = () => {
-            const [data, setData] = useState({ inventory: [], combos: [] });
-            const [isLoading, setIsLoading] = useState(true);
-            const [activeCategory, setActiveCategory] = useState('');
+        function filterMenu(cat) {
+            document.querySelectorAll('.cat-pill').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
             
-            // Estados de los Modales
-            const [isWelcomeOpen, setIsWelcomeOpen] = useState(true); // Modal de Inicio
-            const [isRegOpen, setIsRegOpen] = useState(false);
-            const [isSecretOpen, setIsSecretOpen] = useState(false);
-            
-            const [logoClicks, setLogoClicks] = useState(0);
-            const [spotifyLink, setSpotifyLink] = useState('https://spotify.link/2O9zOMPBa3b');
-
-            useEffect(() => {
-                const unsubInv = db.collection('inventory').onSnapshot(snap => {
-                    if (snap) {
-                        const items = snap.docs.map(doc => {
-                            const d = doc.data();
-                            return { id: doc.id, isCombo: false, name: d.name || 'Sin nombre', price: d.price || 0, category: d.category || 'General', imageUrl: d.imageUrl || '', description: d.description || '', likes: d.likes || 0 };
-                        });
-                        setData(prev => ({ ...prev, inventory: items }));
-                    }
-                }, err => console.log(err));
-
-                const unsubComb = db.collection('combos').onSnapshot(snap => {
-                    if (snap) {
-                        const items = snap.docs.map(doc => {
-                            const d = doc.data();
-                            return { id: doc.id, isCombo: true, name: d.name || 'Sin nombre', price: d.price || 0, category: d.category || 'Combos', imageUrl: d.imageUrl || '', description: d.description || '', likes: d.likes || 0 };
-                        });
-                        setData(prev => ({ ...prev, combos: items }));
-                    }
-                    setIsLoading(false);
-                }, err => { console.log(err); setIsLoading(false); });
-
-                const unsubSpotify = db.collection('configuracionGeneral').doc('spotify').onSnapshot(doc => {
-                    if (doc.exists && doc.data().jamLink) setSpotifyLink(doc.data().jamLink);
-                }, err => console.log(err));
-
-                return () => { unsubInv(); unsubComb(); unsubSpotify(); };
-            }, []);
-
-            const allProducts = useMemo(() => {
-                return [...(data.inventory || []), ...(data.combos || [])];
-            }, [data]);
-
-            const dynamicCategories = useMemo(() => {
-                const cats = new Set();
-                allProducts.forEach(p => { 
-                    if (p && p.category) cats.add(p.category.toUpperCase().trim()); 
-                });
-                const orderedCats = Array.from(cats);
-                if (orderedCats.length > 0 && !activeCategory) {
-                    setActiveCategory(orderedCats[0]);
-                }
-                return orderedCats;
-            }, [allProducts, activeCategory]);
-
-            const handleLogoTouch = () => {
-                setLogoClicks(prev => {
-                    const currentCount = prev + 1;
-                    if (currentCount >= 10) { setIsSecretOpen(true); return 0; }
-                    setTimeout(() => setLogoClicks(0), 4000);
-                    return currentCount;
-                });
-            };
-
-            if (isLoading) return <div className="min-h-screen bg-oficina-dark flex items-center justify-center"><LogoOficina className="w-16 h-16 text-oficina-accent animate-pulse" /></div>;
-
-            const filteredProducts = allProducts.filter(p => p && p.category && p.category.toUpperCase().trim() === activeCategory);
-
-            return (
-                <div className="min-h-screen max-w-md mx-auto bg-oficina-bg pb-24 shadow-2xl relative">
-                    <header className="pt-10 pb-6 px-6 text-center relative">
-                        <button onClick={() => setIsRegOpen(true)} className="absolute top-8 left-6 flex items-center gap-2 text-oficina-verde/40 font-black text-[9px] uppercase tracking-widest border border-oficina-verde/10 px-4 py-2 rounded-full">🎁 Club VIP</button>
-                        
-                        <a href="https://www.instagram.com/laoficinaanserma/" target="_blank" rel="noopener noreferrer" className="mx-auto flex items-center justify-center w-max gap-2 bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] text-white px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-transform mb-8 mt-12">
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                            Síguenos en Instagram
-                        </a>
-
-                        <div onClick={handleLogoTouch} className="cursor-pointer inline-block active:scale-95 transition-transform select-none">
-                            <LogoOficina className="w-20 h-20 mx-auto mb-4 text-oficina-verde" />
-                        </div>
-                        
-                        <h1 className="text-3xl font-black uppercase tracking-tighter mb-4">La Oficina</h1>
-                        
-                        <div className="space-y-4">
-                            <a href={spotifyLink} target="_blank" rel="noopener noreferrer" className="w-full bg-black rounded-[2rem] p-5 flex items-center gap-4 relative shadow-2xl">
-                                <div className="relative w-12 h-12 flex-shrink-0 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 animate-spin-slow">
-                                    <div className="w-3 h-3 bg-black rounded-full"></div>
-                                </div>
-                                <div className="text-left">
-                                    <div className="flex gap-1 mb-1">
-                                        {[0.1, 0.4, 0.2].map(d => <div key={d} className="w-1 h-3 bg-[#1DB954] animate-bar" style={{animationDelay: `${d}s`}}></div>)}
-                                        <span className="text-[8px] font-black text-[#1DB954] uppercase tracking-widest ml-2">Live Jam Session</span>
-                                    </div>
-                                    <p className="text-white font-bold text-xs">Poner mi música ahora</p>
-                                </div>
-                            </a>
-                        </div>
-                    </header>
-
-                    {/* Navegación Dinámica */}
-                    {dynamicCategories.length > 0 && (
-                        <nav className="sticky top-0 z-40 bg-oficina-bg/90 backdrop-blur-xl border-b border-oficina-verde/5 py-5 flex gap-8 overflow-x-auto scrollbar-hide px-6 mb-4">
-                            {dynamicCategories.map(cat => (
-                                <button key={cat} onClick={() => setActiveCategory(cat)} className={`whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all pb-1 ${activeCategory === cat ? 'text-oficina-verde border-b-2 border-oficina-verde scale-105' : 'text-oficina-verde/40 opacity-50'}`}>{cat}</button>
-                            ))}
-                        </nav>
-                    )}
-
-                    {/* Feed de Productos */}
-                    <div className="px-4 space-y-6">
-                        {filteredProducts.length > 0 ? (
-                            filteredProducts.map(product => (
-                                <InstagramPost key={product.id} product={product} />
-                            ))
-                        ) : (
-                            <div className="text-center py-12 opacity-30">No hay productos en esta categoría.</div>
-                        )}
-                    </div>
-
-                    {/* Modales */}
-                    <WelcomeModal 
-                        isOpen={isWelcomeOpen} 
-                        onClose={() => setIsWelcomeOpen(false)} 
-                        onOpenReg={() => setIsRegOpen(true)} 
-                    />
-                    <RegistrationModal isOpen={isRegOpen} onClose={() => setIsRegOpen(false)} />
-                    <SecretPortalModal isOpen={isSecretOpen} onClose={() => setIsSecretOpen(false)} />
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+            const filtered = cat === 'TODOS' 
+                ? allProducts 
+                : allProducts.filter(p => (p.category || '').toUpperCase() === cat);
+            renderMenu(filtered);
+        }
     </script>
 </body>
 </html>
