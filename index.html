@@ -16,13 +16,16 @@
             background: #f8f8f8;
             color: #1a1a1a;
             font-family: 'Montserrat', sans-serif;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        /* Pantalla de Bienvenida */
+        /* === PANTALLA INICIAL (Una sola portada) === */
         #welcome-screen {
             position: fixed;
             top: 0; left: 0;
-            width: 100%; height: 100%;
+            width: 100vw;
+            height: 100vh;
             background: white;
             z-index: 1000;
             display: flex;
@@ -31,41 +34,44 @@
             justify-content: center;
             padding: 20px;
             text-align: center;
+            overflow: hidden;
         }
 
-        .logo-text { margin-bottom: 30px; }
+        .logo-text { margin-bottom: 20px; }
 
         .welcome-title {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 700;
             color: var(--green);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .form-group {
             width: 100%;
             max-width: 340px;
-            margin: 15px 0;
+            margin: 12px 0;
         }
 
         input {
             width: 100%;
-            padding: 14px;
+            padding: 13px 16px;
             border: 1px solid #ddd;
             border-radius: 12px;
             font-size: 16px;
         }
 
         .checkbox {
-            margin: 15px 0;
-            font-size: 14px;
+            margin: 12px 0 20px 0;
+            font-size: 13.5px;
+            text-align: left;
+            max-width: 340px;
         }
 
         .btn {
             width: 100%;
             max-width: 340px;
             padding: 14px;
-            margin: 10px 0;
+            margin: 8px 0;
             border: none;
             border-radius: 12px;
             font-weight: 700;
@@ -76,12 +82,12 @@
         .btn-primary { background: var(--green); color: white; }
         .btn-secondary { background: #f0f0f0; color: #333; }
 
-        /* Menú Principal */
+        /* === Menú Principal === */
         #main-content { display: none; }
 
         header {
             text-align: center;
-            padding: 25px 20px 15px;
+            padding: 20px 20px 12px;
             background: white;
             box-shadow: 0 3px 12px rgba(0,0,0,0.05);
         }
@@ -129,12 +135,6 @@
             padding: 18px 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             transition: all 0.3s;
-            text-align: left;
-        }
-
-        .menu-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(45,90,39,0.15);
         }
 
         .menu-btn h3 {
@@ -157,7 +157,7 @@
 
         footer {
             text-align: center;
-            padding: 25px 20px;
+            padding: 20px;
             color: #777;
             font-size: 13px;
         }
@@ -165,18 +165,18 @@
 </head>
 <body>
 
-    <!-- Pantalla de Bienvenida -->
+    <!-- Pantalla Inicial (Adaptada perfectamente al celular) -->
     <div id="welcome-screen">
         <div class="logo-text">
-            <svg width="280" height="100" viewBox="0 0 320 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <text x="160" y="55" font-family="Montserrat" font-size="31" font-weight="700" fill="#2d5a27" letter-spacing="-1.8px" text-anchor="middle">LA OFICINA</text>
-                <text x="160" y="80" font-family="Montserrat" font-size="11.5" font-weight="600" fill="#2d5a27" letter-spacing="5.5px" text-anchor="middle">COFFEE BAR</text>
+            <svg width="260" height="90" viewBox="0 0 320 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <text x="160" y="52" font-family="Montserrat" font-size="29" font-weight="700" fill="#2d5a27" letter-spacing="-1.8px" text-anchor="middle">LA OFICINA</text>
+                <text x="160" y="77" font-family="Montserrat" font-size="11" font-weight="600" fill="#2d5a27" letter-spacing="5.5px" text-anchor="middle">COFFEE BAR</text>
             </svg>
         </div>
 
-        <h1 class="welcome-title">¡Bienvenido!</h1>
-        <p style="max-width:340px; margin-bottom:25px; color:#555;">
-            Únete a nuestro club y recibe ofertas exclusivas
+        <h1 class="welcome-title">¡Bienvenido a La Oficina!</h1>
+        <p style="max-width:320px; color:#555; margin-bottom:20px;">
+            Únete a nuestro club y recibe ofertas especiales
         </p>
 
         <div class="form-group">
@@ -188,13 +188,13 @@
 
         <label class="checkbox">
             <input type="checkbox" id="autorizacion" checked>
-            Autorizo que me contacten para promociones del club
+            Autorizo recibir promociones del club
         </label>
 
         <button onclick="registrarCliente()" class="btn btn-primary">Unirme al Club</button>
         <button onclick="skipToMenu()" class="btn btn-secondary">Ver Menú sin registrarme</button>
 
-        <div style="margin-top: 35px; width:100%; max-width:340px;">
+        <div style="margin-top: 25px; width:100%; max-width:340px;">
             <button onclick="window.open('https://www.instagram.com/laoficinaanserma?igsh=MWtzOHE4OWx3MTk1dw==','_blank')" class="btn btn-secondary">📸 Síguenos en Instagram</button>
             <button onclick="window.open('https://wa.me/573334319847?text=Hola,%20quiero%20enviar%20una%20queja,%20sugerencia%20o%20felicitación','_blank')" class="btn btn-secondary">✉️ Quejas / Sugerencias</button>
             <button onclick="alert('Portal de empleo en construcción. Próximamente disponible.')" class="btn btn-secondary">💼 Trabaja con Nosotros</button>
@@ -204,9 +204,9 @@
     <!-- Menú Principal -->
     <div id="main-content">
         <header>
-            <svg width="280" height="95" viewBox="0 0 320 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <text x="160" y="55" font-family="Montserrat" font-size="29" font-weight="700" fill="#2d5a27" letter-spacing="-1.8px" text-anchor="middle">LA OFICINA</text>
-                <text x="160" y="80" font-family="Montserrat" font-size="11" font-weight="600" fill="#2d5a27" letter-spacing="5.5px" text-anchor="middle">COFFEE BAR</text>
+            <svg width="260" height="85" viewBox="0 0 320 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <text x="160" y="50" font-family="Montserrat" font-size="27" font-weight="700" fill="#2d5a27" letter-spacing="-1.6px" text-anchor="middle">LA OFICINA</text>
+                <text x="160" y="74" font-family="Montserrat" font-size="10.5" font-weight="600" fill="#2d5a27" letter-spacing="5px" text-anchor="middle">COFFEE BAR</text>
             </svg>
         </header>
 
@@ -237,7 +237,7 @@
             const autorizacion = document.getElementById('autorizacion').checked;
 
             if (!nombre || !telefono) {
-                alert("Por favor completa tu nombre y número de teléfono");
+                alert("Por favor completa tu nombre y número");
                 return;
             }
 
@@ -249,7 +249,7 @@
             }).then(() => {
                 alert("¡Gracias por registrarte! 🎉");
                 skipToMenu();
-            }).catch(() => alert("Error al guardar. Inténtalo de nuevo."));
+            }).catch(() => alert("Error al guardar. Inténtalo nuevamente."));
         }
 
         function skipToMenu() {
@@ -283,7 +283,7 @@
         function renderMenu(items) {
             const container = document.getElementById('menu-container');
             container.innerHTML = items.map(p => `
-                <div class="menu-btn" onclick="alert('Producto seleccionado: ${p.name}')">
+                <div class="menu-btn">
                     <h3>${p.name}</h3>
                     <p>${p.description || ''}</p>
                     <div class="price">$${Number(p.price).toLocaleString('es-CO')}</div>
