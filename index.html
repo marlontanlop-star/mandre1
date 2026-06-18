@@ -16,16 +16,76 @@
             background: #f8f8f8;
             color: #1a1a1a;
             font-family: 'Montserrat', sans-serif;
-            padding-bottom: 70px;
         }
-        
+
+        /* Pantalla de Bienvenida */
+        #welcome-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: white;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .logo-text { margin-bottom: 30px; }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--green);
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            width: 100%;
+            max-width: 340px;
+            margin: 15px 0;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+
+        .checkbox {
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            max-width: 340px;
+            padding: 14px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: var(--green); color: white; }
+        .btn-secondary { background: #f0f0f0; color: #333; }
+
+        /* Menú Principal */
+        #main-content { display: none; }
+
         header {
             text-align: center;
-            padding: 30px 20px 18px;
+            padding: 25px 20px 15px;
             background: white;
             box-shadow: 0 3px 12px rgba(0,0,0,0.05);
         }
-        
+
         #categories {
             display: flex;
             overflow-x: auto;
@@ -36,7 +96,7 @@
             scrollbar-width: none;
         }
         #categories::-webkit-scrollbar { display: none; }
-        
+
         .cat-pill {
             padding: 11px 20px;
             font-size: 14.5px;
@@ -46,67 +106,58 @@
             border-radius: 50px;
             white-space: nowrap;
             background: white;
-            transition: all 0.3s ease;
         }
         
         .cat-pill.active {
             background: var(--green);
             color: white;
         }
-        
+
         .feed {
-            max-width: 500px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 12px 10px;
+            padding: 15px 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
         }
-        
-        .post {
+
+        .menu-btn {
             background: white;
-            border-radius: 18px;
-            overflow: hidden;
-            margin-bottom: 26px;
-            box-shadow: 0 5px 18px rgba(0,0,0,0.08);
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            padding: 18px 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+            text-align: left;
         }
-        
-        .post-img-container {
-            position: relative;
-            width: 100%;
-            padding-top: 125%;
+
+        .menu-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(45,90,39,0.15);
         }
-        
-        .post img {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            object-fit: cover;
-        }
-        
-        .post-info {
-            padding: 18px;
-        }
-        
-        .post-info h3 {
-            font-size: 17.5px;
+
+        .menu-btn h3 {
+            font-size: 17px;
             font-weight: 700;
-            margin-bottom: 7px;
+            margin-bottom: 6px;
         }
-        
-        .post-info p {
-            font-size: 14.5px;
-            color: #555;
-            line-height: 1.45;
+
+        .menu-btn p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
         }
-        
+
         .price {
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 700;
             color: var(--green);
-            margin-top: 14px;
         }
-        
+
         footer {
             text-align: center;
-            padding: 30px 20px 20px;
+            padding: 25px 20px;
             color: #777;
             font-size: 13px;
         }
@@ -114,20 +165,56 @@
 </head>
 <body>
 
-    <header>
-        <!-- Logo solo texto - versión elegante -->
-        <svg width="300" height="110" viewBox="0 0 320 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <text x="160" y="55" font-family="Montserrat" font-size="31" font-weight="700" fill="#2d5a27" letter-spacing="-1.8px" text-anchor="middle">LA OFICINA</text>
-            <text x="160" y="80" font-family="Montserrat" font-size="11.5" font-weight="600" fill="#2d5a27" letter-spacing="5.5px" text-anchor="middle">COFFEE BAR</text>
-        </svg>
-    </header>
+    <!-- Pantalla de Bienvenida -->
+    <div id="welcome-screen">
+        <div class="logo-text">
+            <svg width="280" height="100" viewBox="0 0 320 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <text x="160" y="55" font-family="Montserrat" font-size="31" font-weight="700" fill="#2d5a27" letter-spacing="-1.8px" text-anchor="middle">LA OFICINA</text>
+                <text x="160" y="80" font-family="Montserrat" font-size="11.5" font-weight="600" fill="#2d5a27" letter-spacing="5.5px" text-anchor="middle">COFFEE BAR</text>
+            </svg>
+        </div>
 
-    <div id="categories"></div>
-    <div id="menu-container" class="feed"></div>
+        <h1 class="welcome-title">¡Bienvenido!</h1>
+        <p style="max-width:340px; margin-bottom:25px; color:#555;">
+            Únete a nuestro club y recibe ofertas exclusivas
+        </p>
 
-    <footer>
-        LA OFICINA COFFEE BAR
-    </footer>
+        <div class="form-group">
+            <input type="text" id="nombre" placeholder="Tu nombre completo" required>
+        </div>
+        <div class="form-group">
+            <input type="tel" id="telefono" placeholder="Número de WhatsApp" required>
+        </div>
+
+        <label class="checkbox">
+            <input type="checkbox" id="autorizacion" checked>
+            Autorizo que me contacten para promociones del club
+        </label>
+
+        <button onclick="registrarCliente()" class="btn btn-primary">Unirme al Club</button>
+        <button onclick="skipToMenu()" class="btn btn-secondary">Ver Menú sin registrarme</button>
+
+        <div style="margin-top: 35px; width:100%; max-width:340px;">
+            <button onclick="window.open('https://www.instagram.com/laoficinaanserma?igsh=MWtzOHE4OWx3MTk1dw==','_blank')" class="btn btn-secondary">📸 Síguenos en Instagram</button>
+            <button onclick="window.open('https://wa.me/573334319847?text=Hola,%20quiero%20enviar%20una%20queja,%20sugerencia%20o%20felicitación','_blank')" class="btn btn-secondary">✉️ Quejas / Sugerencias</button>
+            <button onclick="alert('Portal de empleo en construcción. Próximamente disponible.')" class="btn btn-secondary">💼 Trabaja con Nosotros</button>
+        </div>
+    </div>
+
+    <!-- Menú Principal -->
+    <div id="main-content">
+        <header>
+            <svg width="280" height="95" viewBox="0 0 320 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <text x="160" y="55" font-family="Montserrat" font-size="29" font-weight="700" fill="#2d5a27" letter-spacing="-1.8px" text-anchor="middle">LA OFICINA</text>
+                <text x="160" y="80" font-family="Montserrat" font-size="11" font-weight="600" fill="#2d5a27" letter-spacing="5.5px" text-anchor="middle">COFFEE BAR</text>
+            </svg>
+        </header>
+
+        <div id="categories"></div>
+        <div id="menu-container" class="feed"></div>
+
+        <footer>LA OFICINA COFFEE BAR</footer>
+    </div>
 
     <script>
         const firebaseConfig = {
@@ -141,43 +228,68 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+
         let allProducts = [];
+
+        function registrarCliente() {
+            const nombre = document.getElementById('nombre').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+            const autorizacion = document.getElementById('autorizacion').checked;
+
+            if (!nombre || !telefono) {
+                alert("Por favor completa tu nombre y número de teléfono");
+                return;
+            }
+
+            db.collection('clients').add({
+                nombre: nombre,
+                telefono: telefono,
+                autorizacionClub: autorizacion,
+                fecha: new Date()
+            }).then(() => {
+                alert("¡Gracias por registrarte! 🎉");
+                skipToMenu();
+            }).catch(() => alert("Error al guardar. Inténtalo de nuevo."));
+        }
+
+        function skipToMenu() {
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            loadMenu();
+        }
+
+        function loadMenu() {
+            db.collection('inventory').onSnapshot(snap => {
+                allProducts = [];
+                let cats = new Set(['TODOS']);
+
+                snap.forEach(doc => {
+                    const p = doc.data();
+                    if (p.showOnTv !== false) {
+                        allProducts.push(p);
+                        if (p.category) cats.add(p.category.toUpperCase());
+                    }
+                });
+
+                const catHTML = Array.from(cats).map(c => 
+                    `<div class="cat-pill ${c==='TODOS'?'active':''}" onclick="filterMenu('${c}')">${c}</div>`
+                ).join('');
+                document.getElementById('categories').innerHTML = catHTML;
+
+                renderMenu(allProducts);
+            });
+        }
 
         function renderMenu(items) {
             const container = document.getElementById('menu-container');
             container.innerHTML = items.map(p => `
-                <div class="post">
-                    <div class="post-img-container">
-                        <img src="${p.imageUrl || 'https://via.placeholder.com/600x750/eeeeee/2d5a27?text=La+Oficina'}" alt="${p.name}">
-                    </div>
-                    <div class="post-info">
-                        <h3>${p.name}</h3>
-                        <p>${p.description || ''}</p>
-                        <div class="price">$${Number(p.price).toLocaleString('es-CO')}</div>
-                    </div>
+                <div class="menu-btn" onclick="alert('Producto seleccionado: ${p.name}')">
+                    <h3>${p.name}</h3>
+                    <p>${p.description || ''}</p>
+                    <div class="price">$${Number(p.price).toLocaleString('es-CO')}</div>
                 </div>
             `).join('');
         }
-
-        db.collection('inventory').onSnapshot(snap => {
-            allProducts = [];
-            let cats = new Set(['TODOS']);
-
-            snap.forEach(doc => {
-                const p = doc.data();
-                if (p.showOnTv !== false) {
-                    allProducts.push(p);
-                    if (p.category) cats.add(p.category.toUpperCase());
-                }
-            });
-
-            const catHTML = Array.from(cats).map(c => 
-                `<div class="cat-pill ${c==='TODOS'?'active':''}" onclick="filterMenu('${c}')">${c}</div>`
-            ).join('');
-            document.getElementById('categories').innerHTML = catHTML;
-
-            renderMenu(allProducts);
-        });
 
         function filterMenu(cat) {
             document.querySelectorAll('.cat-pill').forEach(el => el.classList.remove('active'));
