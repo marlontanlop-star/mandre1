@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://laoficinacoffeebar.com/$1",
+      "permanent": true
+    }
+  ]
+}
